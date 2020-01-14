@@ -144,7 +144,7 @@ def train_test(exp_name:str, exp_desc:str, epochs:int, model_name:str, seed:int)
     logging.info(f'param_size_m={param_size(net)/1E6:.1f}')
     net = net.to(device)
 
-    criterion = torch.nn.CrossEntropyLoss()
+    criterion = torch.nn.CrossEntropyLoss().to(device)
     optimizer = torch.optim.SGD(net.parameters(), lr,
                                     momentum=momentum,
                                     weight_decay=weight_decay)

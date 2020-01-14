@@ -62,7 +62,7 @@ def train_epoch(epoch, net, train_dl, device, crit, optim, sched, half)->float:
         targets = targets.to(device)
 
         if half:
-            inputs.half()
+            inputs = inputs.half()
 
         outputs = net(inputs)
         loss = crit(outputs, targets)
@@ -87,7 +87,7 @@ def test(net, test_dl, device, half)->float:
             targets = targets.to(device)
 
             if half:
-                inputs.half()
+                inputs = inputs.half()
 
             outputs = net(inputs)
             _, predicted = outputs.max(1)
@@ -160,6 +160,7 @@ def train_test(exp_name:str, exp_desc:str, epochs:int, model_name:str,
     logging.info(f'exp_name="{exp_name}", exp_desc="{exp_desc}"')
     logging.info(f'model_name="{model_name}", seed={seed}, epochs={epochs}')
     logging.info(f'lr={lr}, momentum={momentum}, weight_decay={weight_decay}')
+    logging.info(f'half={half}')
     logging.info(f'datadir="{datadir}"')
     logging.info(f'expdir="{expdir}"')
 

@@ -153,7 +153,8 @@ def train_test(exp_name:str, exp_desc:str, epochs:int, model_name:str, seed:int)
     if not is_debugging():
         sysinfo_filepath = os.path.join(expdir, 'sysinfo.txt')
         subprocess.Popen([f'./sysinfo.sh "{expdir}" > "{sysinfo_filepath}"'],
-                         stdout=subprocess.PIPE, shell=True)
+                         stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                         shell=True)
 
     setup_cuda(seed)
 

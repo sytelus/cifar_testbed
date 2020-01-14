@@ -146,10 +146,10 @@ def setup_cuda(seed):
 
 @MeasureTime
 def train_test(exp_name:str, exp_desc:str, epochs:int, model_name:str,
-               seed:int, half:bool, cutout:int)->float:
+               seed:int, half:bool, cutout:int, sched_type:str)->float:
     # config
-    lr, momentum, weight_decay = 0.025, 0.9, 3.0e-4 # darts
-    #lr, momentum, weight_decay = 0.1, 0.9, 1.0e-4 # resnet
+    #lr, momentum, weight_decay = 0.025, 0.9, 3.0e-4 # darts
+    lr, momentum, weight_decay = 0.1, 0.9, 1.0e-4 # resnet
 
 
     # dirs
@@ -163,7 +163,7 @@ def train_test(exp_name:str, exp_desc:str, epochs:int, model_name:str,
     logging.info(f'exp_name="{exp_name}", exp_desc="{exp_desc}"')
     logging.info(f'model_name="{model_name}", seed={seed}, epochs={epochs}')
     logging.info(f'lr={lr}, momentum={momentum}, weight_decay={weight_decay}')
-    logging.info(f'half={half}, cutout={cutout}')
+    logging.info(f'half={half}, cutout={cutout}, sched_type={sched_type}')
     logging.info(f'datadir="{datadir}"')
     logging.info(f'expdir="{expdir}"')
 
@@ -184,10 +184,16 @@ def train_test(exp_name:str, exp_desc:str, epochs:int, model_name:str,
 
     crit = torch.nn.CrossEntropyLoss().to(device)
     optim = torch.optim.SGD(net.parameters(), lr,
-                                    momentum=momentum,
-                                    weight_decay=weight_decay)
-    sched = torch.optim.lr_scheduler.CosineAnnealingLR(optim,
-        T_max=epochs, eta_min=0.001)
+        momentum=momentum, weight_decay=weight_decay)
+
+    if sched_type=='cosine':
+        sched = torch.optim.lr_scheduler.CosineAnnealingLR(optim,
+            T_max=epochs, eta_min=0.001) # darts paper
+    elif sched_type=='multi_step':
+        sched = torch.optim.lr_scheduler.MultiStepLR(optim,
+            milestones=[100, 150]) # resnet original paper
+    else:
+        raise RuntimeError(f'Unsupported LR scheduler type: {sched_type}')
 
     train_dl, test_dl = cifar10_dataloaders(datadir, cutout=cutout)
 
@@ -204,12 +210,13 @@ def main():
     parser.add_argument('--seed', '-s', type=int, default=42)
     parser.add_argument('--half', action='store_true', default=False)
     parser.add_argument('--cutout', type=int, default=0)
+    parser.add_argument('--sched_type', default='cosine')
 
     args = parser.parse_args()
 
     acc = train_test(args.experiment_name, args.experiment_description,
                      args.epochs, args.model_name, args.seed, args.half,
-                     args.cutout)
+                     args.cutout, args.sched_type)
     print_all_timings()
     logging.info(f'test_accuracy={acc}')
 

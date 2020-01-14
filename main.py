@@ -36,10 +36,10 @@ def cifar10_dataloaders(datadir:str, train_num_workers=4, test_num_workers=4) \
     test_transform = transforms.Compose(norm_transf)
 
     trainset = torchvision.datasets.CIFAR10(root=datadir, train=True, download=True, transform=train_transform)
-    train_dl = torch.utils.data.DataLoader(trainset, batch_size=128, shuffle=True, num_workers=train_num_workers)
+    train_dl = torch.utils.data.DataLoader(trainset, batch_size=128, shuffle=True, num_workers=train_num_workers, pin_memory=True)
 
     testset = torchvision.datasets.CIFAR10(root=datadir, train=False, download=True, transform=test_transform)
-    test_dl = torch.utils.data.DataLoader(testset, batch_size=1024, shuffle=False, num_workers=test_num_workers)
+    test_dl = torch.utils.data.DataLoader(testset, batch_size=1024, shuffle=False, num_workers=test_num_workers, pin_memory=True)
 
     return train_dl, test_dl
 
@@ -119,7 +119,7 @@ def setup_cuda(seed):
 @MeasureTime
 def train_test(exp_name:str, exp_desc:str, epochs:int, model_name:str, seed:int)->float:
     # config
-    lr, momentum, weight_decay = 0.1, 0.0, 0.0
+    lr, momentum, weight_decay = 0.1, 0.9, 1.0e-4
 
     # dirs
     datadir = full_path('~/torchvision_data_dir')

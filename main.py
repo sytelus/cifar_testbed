@@ -14,11 +14,15 @@ import torchvision
 import torchvision.transforms as transforms
 
 from timing import MeasureTime, print_all_timings
+import cifar10_models
+
+def is_debugging()->bool:
+    return 'pydevd' in sys.modules # works for vscode
 
 @MeasureTime
 def cifar10_dataloaders(datadir:str, train_num_workers=4, test_num_workers=4) \
         ->Tuple[DataLoader, DataLoader]:
-    if 'pydevd' in sys.modules:
+    if is_debugging():
         train_num_workers = test_num_workers = 0
         logging.info('debugger=true, num_workers=0')
 
@@ -146,16 +150,16 @@ def train_test(exp_name:str, exp_desc:str, epochs:int, model_name:str, seed:int)
     logging.info(f'datadir="{datadir}"')
     logging.info(f'expdir="{expdir}"')
 
-    f = open(os.path.join(expdir, 'sysinfo.txt'), 'w')
-    subprocess.Popen(['bash', './sysinfo.sh'], stdout=f, stderr=f)
-    code_filepath = os.path.join(expdir, 'code.tar')
-    subprocess.Popen(['tar', '-cf', f'{code_filepath}', '**/*.py', '**/*.yaml'])
+    if not is_debugging():
+        sysinfo_filepath = os.path.join(expdir, 'sysinfo.txt')
+        subprocess.Popen([f'./sysinfo.sh "{expdir}" > "{sysinfo_filepath}"'],
+                         stdout=subprocess.PIPE, shell=True)
 
     setup_cuda(seed)
 
     device = torch.device('cuda')
 
-    model_class = getattr(torchvision.models, model_name)
+    model_class = getattr(cifar10_models, model_name)
     net = model_class()
     logging.info(f'param_size_m={param_size(net)/1E6:.1f}')
     net = net.to(device)

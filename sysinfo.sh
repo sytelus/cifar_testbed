@@ -1,3 +1,6 @@
+pwd
+find . -name "*.py" -o -name "*.yaml" | tar -cf $1/code.tar -T -
+
 echo "System info"
 echo -e "\n ********* GPU Matrx *********\n"
 nvidia-smi topo --matrix

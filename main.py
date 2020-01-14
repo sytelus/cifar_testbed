@@ -15,13 +15,14 @@ import torchvision.transforms as transforms
 
 from timing import MeasureTime, print_all_timings
 import cifar10_models
+from cutout import CutoutDefault
 
 def is_debugging()->bool:
     return 'pydevd' in sys.modules # works for vscode
 
 @MeasureTime
-def cifar10_dataloaders(datadir:str, train_num_workers=4, test_num_workers=4) \
-        ->Tuple[DataLoader, DataLoader]:
+def cifar10_dataloaders(datadir:str, train_num_workers=4, test_num_workers=4,
+                        cutout=0) ->Tuple[DataLoader, DataLoader]:
     if is_debugging():
         train_num_workers = test_num_workers = 0
         logging.info('debugger=true, num_workers=0')
@@ -38,6 +39,8 @@ def cifar10_dataloaders(datadir:str, train_num_workers=4, test_num_workers=4) \
     ]
 
     train_transform = transforms.Compose(aug_transf + norm_transf)
+    if cutout > 0: # must be after normalization
+        train_transform.transforms.append(CutoutDefault(cutout))
     test_transform = transforms.Compose(norm_transf)
 
     trainset = torchvision.datasets.CIFAR10(root=datadir, train=True,
@@ -143,7 +146,7 @@ def setup_cuda(seed):
 
 @MeasureTime
 def train_test(exp_name:str, exp_desc:str, epochs:int, model_name:str,
-               seed:int, half:bool)->float:
+               seed:int, half:bool, cutout:int)->float:
     # config
     lr, momentum, weight_decay = 0.025, 0.9, 3.0e-4 # darts
     #lr, momentum, weight_decay = 0.1, 0.9, 1.0e-4 # resnet
@@ -160,7 +163,7 @@ def train_test(exp_name:str, exp_desc:str, epochs:int, model_name:str,
     logging.info(f'exp_name="{exp_name}", exp_desc="{exp_desc}"')
     logging.info(f'model_name="{model_name}", seed={seed}, epochs={epochs}')
     logging.info(f'lr={lr}, momentum={momentum}, weight_decay={weight_decay}')
-    logging.info(f'half={half}')
+    logging.info(f'half={half}, cutout={cutout}')
     logging.info(f'datadir="{datadir}"')
     logging.info(f'expdir="{expdir}"')
 
@@ -186,7 +189,7 @@ def train_test(exp_name:str, exp_desc:str, epochs:int, model_name:str,
     sched = torch.optim.lr_scheduler.CosineAnnealingLR(optim,
         T_max=epochs, eta_min=0.001)
 
-    train_dl, test_dl = cifar10_dataloaders(datadir)
+    train_dl, test_dl = cifar10_dataloaders(datadir, cutout=cutout)
 
     train(epochs, train_dl, net, device, crit, optim, sched, half)
 
@@ -200,11 +203,13 @@ def main():
     parser.add_argument('--model-name', '-m', default='resnet34')
     parser.add_argument('--seed', '-s', type=int, default=42)
     parser.add_argument('--half', action='store_true', default=False)
+    parser.add_argument('--cutout', type=int, default=0)
 
     args = parser.parse_args()
 
     acc = train_test(args.experiment_name, args.experiment_description,
-                     args.epochs, args.model_name, args.seed, args.half)
+                     args.epochs, args.model_name, args.seed, args.half,
+                     args.cutout)
     print_all_timings()
     logging.info(f'test_accuracy={acc}')
 

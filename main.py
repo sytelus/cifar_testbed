@@ -54,12 +54,16 @@ def cifar10_dataloaders(datadir:str, train_num_workers=4, test_num_workers=4) \
 
 # Training
 @MeasureTime
-def train_epoch(epoch, net, train_dl, device, crit, optim, sched)->float:
+def train_epoch(epoch, net, train_dl, device, crit, optim, sched, half)->float:
     correct, total = 0, 0
     net.train()
     for batch_idx, (inputs, targets) in enumerate(train_dl):
         inputs = inputs.to(device, non_blocking=False)
         targets = targets.to(device)
+
+        if half:
+            inputs.half()
+
         outputs = net(inputs)
         loss = crit(outputs, targets)
 
@@ -74,13 +78,16 @@ def train_epoch(epoch, net, train_dl, device, crit, optim, sched)->float:
     return 100.0*correct/total
 
 @MeasureTime
-def test(net, test_dl, device)->float:
+def test(net, test_dl, device, half)->float:
     correct, total = 0, 0
     net.eval()
     with torch.no_grad():
         for batch_idx, (inputs, targets) in enumerate(test_dl):
             inputs = inputs.to(device, non_blocking=False)
             targets = targets.to(device)
+
+            if half:
+                inputs.half()
 
             outputs = net(inputs)
             _, predicted = outputs.max(1)
@@ -89,10 +96,13 @@ def test(net, test_dl, device)->float:
     return 100.0*correct/total
 
 @MeasureTime
-def train(epochs, train_dl, net, device, crit, optim, sched)->None:
+def train(epochs, train_dl, net, device, crit, optim, sched, half)->None:
+    if half:
+        net.half()
+        crit.half()
     for epoch in range(epochs):
         lr = optim.param_groups[0]['lr']
-        acc = train_epoch(epoch, net, train_dl, device, crit, optim, sched)
+        acc = train_epoch(epoch, net, train_dl, device, crit, optim, sched, half)
         logging.info(f'train_epoch={epoch}, prec1={acc}, lr={lr:.4g}')
 
 
@@ -132,7 +142,8 @@ def setup_cuda(seed):
     cudnn.benchmark = True
 
 @MeasureTime
-def train_test(exp_name:str, exp_desc:str, epochs:int, model_name:str, seed:int)->float:
+def train_test(exp_name:str, exp_desc:str, epochs:int, model_name:str,
+               seed:int, half:bool)->float:
     # config
     lr, momentum, weight_decay = 0.025, 0.9, 3.0e-4 # darts
     #lr, momentum, weight_decay = 0.1, 0.9, 1.0e-4 # resnet
@@ -176,9 +187,9 @@ def train_test(exp_name:str, exp_desc:str, epochs:int, model_name:str, seed:int)
 
     train_dl, test_dl = cifar10_dataloaders(datadir)
 
-    train(epochs, train_dl, net, device, crit, optim, sched)
+    train(epochs, train_dl, net, device, crit, optim, sched, half)
 
-    return test(net, test_dl, device)
+    return test(net, test_dl, device, half)
 
 def main():
     parser = argparse.ArgumentParser(description='Pytorch cifasr testbed')
@@ -187,11 +198,12 @@ def main():
     parser.add_argument('--epochs', '-e', type=int, default=35)
     parser.add_argument('--model-name', '-m', default='resnet34')
     parser.add_argument('--seed', '-s', type=int, default=42)
+    parser.add_argument('--half', '-h', type=bool, default=False)
 
     args = parser.parse_args()
 
     acc = train_test(args.experiment_name, args.experiment_description,
-                     args.epochs, args.model_name, args.seed)
+                     args.epochs, args.model_name, args.seed, args.half)
     print_all_timings()
     logging.info(f'test_accuracy={acc}')
 

@@ -3,6 +3,7 @@ import os
 import sys
 import logging
 import argparse
+import subprocess
 
 import torch
 import torch.backends.cudnn as cudnn
@@ -143,6 +144,9 @@ def train_test(exp_name:str, exp_desc:str, epochs:int, model_name:str, seed:int)
     logging.info(f'datadir={datadir}')
     logging.info(f'expdir={expdir}')
 
+    f = open(os.path.join(expdir, 'sysinfo.txt'), 'w')
+    subprocess.Popen(['bash', './sysinfo.sh'], stdout=f, stderr=f)
+
     setup_cuda(seed)
 
     device = torch.device('cuda')
@@ -162,6 +166,7 @@ def train_test(exp_name:str, exp_desc:str, epochs:int, model_name:str, seed:int)
     train_dl, test_dl = cifar10_dataloaders(datadir)
 
     train(epochs, train_dl, net, device, crit, optim, sched)
+
     return test(net, test_dl, device)
 
 def main():

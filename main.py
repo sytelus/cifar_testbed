@@ -131,7 +131,7 @@ def train_test(exp_name:str, exp_desc:str, epochs:int, model_name:str, seed:int)
 
     # dirs
     datadir = full_path('~/torchvision_data_dir')
-    expdir = full_path(os.path.join('.', 'results', exp_name))
+    expdir = full_path(os.path.join('~/logdir/cifar_testbed/', exp_name))
     os.makedirs(datadir, exist_ok=True)
     os.makedirs(expdir, exist_ok=True)
     setup_logging(filepath=os.path.join(expdir, 'logs.log'))

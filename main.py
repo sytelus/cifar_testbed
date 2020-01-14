@@ -77,7 +77,8 @@ def train_epoch(epoch, net, train_dl, device, crit, optim, sched, half)->float:
         _, predicted = outputs.max(1)
         total += targets.size(0)
         correct += predicted.eq(targets).sum().item()
-    sched.step()
+    if sched:
+        sched.step()
     return 100.0*correct/total
 
 @MeasureTime
@@ -191,16 +192,23 @@ def train_test(exp_name:str, exp_desc:str, epochs:int, model_name:str,
                                 lr, momentum=momentum, weight_decay=weight_decay)
         logging.info(f'optim_type={optim_type}, '
                      f'lr={lr}, momentum={momentum}, weight_decay={weight_decay}')
+    elif optim_type=='sc': # super convergence
+        lr, betas, weight_decay = 0.001, (0.9, 0.999), 0.01
+        optim = torch.optim.AdamW(net.parameters(), lr=lr, betas=betas, eps=1.0e-08,
+                          weight_decay=weight_decay, amsgrad=False)
+        logging.info(f'optim_type={optim_type}, '
+                     f'lr={lr}, betas=betas, weight_decay={weight_decay}')
     else:
         raise RuntimeError(f'Unsupported LR scheduler type: {sched_type}')
 
-
-    if sched_type=='cosine':
+    if sched_type=='darts':
         sched = torch.optim.lr_scheduler.CosineAnnealingLR(optim,
             T_max=epochs, eta_min=0.001) # darts paper
-    elif sched_type=='multi_step':
+    elif sched_type=='resnet':
         sched = torch.optim.lr_scheduler.MultiStepLR(optim,
             milestones=[100, 150]) # resnet original paper
+    elif sched_type=='sc':
+        sched = None
     else:
         raise RuntimeError(f'Unsupported LR scheduler type: {sched_type}')
 
@@ -220,12 +228,19 @@ def main():
     parser.add_argument('--seed', '-s', type=int, default=42)
     parser.add_argument('--half', action='store_true', default=False)
     parser.add_argument('--cutout', type=int, default=0)
-    parser.add_argument('--sched-type', default='cosine',
-                        help='LR scheduler: cosine (used in darts) or multi-step (used in resnet)')
-    parser.add_argument('--optim-type', default='darts',
-                        help='Optimizer: darts or resnet')
+    parser.add_argument('--sched-type', default='',
+                        help='LR scheduler: darts (cosine) or '
+                             'resnet (multi-step)(default) or '
+                             'sc (super convergence)')
+    parser.add_argument('--optim-type', default='',
+                        help='Optimizer: darts(default) or resnet or sc`')
+    parser.add_argument('--optim-sched', '-os', default='darts',
+                        help='Optimizer and scheduler: darts or resnet or sc')
 
     args = parser.parse_args()
+
+    args.sched_type = args.sched_type or args.optim_sched
+    args.optim_type = args.optim_type or args.optim_sched
 
     acc = train_test(args.experiment_name, args.experiment_description,
                      args.epochs, args.model_name, args.seed, args.half,

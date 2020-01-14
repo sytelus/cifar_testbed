@@ -93,7 +93,7 @@ def train(epochs, train_dl, net, device, crit, optim, sched)->None:
     for epoch in range(epochs):
         lr = optim.param_groups[0]['lr']
         acc = train_epoch(epoch, net, train_dl, device, crit, optim, sched)
-        logging.info(f'train_epoch={epoch}, prec1={acc}, lr={lr:.1e}')
+        logging.info(f'train_epoch={epoch}, prec1={acc}, lr={lr:.4g}')
 
 
 def param_size(model:torch.nn.Module)->int:
@@ -161,7 +161,7 @@ def train_test(exp_name:str, exp_desc:str, epochs:int, model_name:str, seed:int)
 
     model_class = getattr(cifar10_models, model_name)
     net = model_class()
-    logging.info(f'param_size_m={param_size(net)/1E6:.1f}')
+    logging.info(f'param_size_m={param_size(net):.1e}')
     net = net.to(device)
 
     crit = torch.nn.CrossEntropyLoss().to(device)

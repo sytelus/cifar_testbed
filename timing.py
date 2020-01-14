@@ -27,11 +27,11 @@ def print_timing(name:str)->None:
     else:
         count = len(stats)
         logging.info(f'timing_name="{name}", '
-              f'avg={stats.mean():.1f} '
+              f'avg={stats.mean():.4g} '
               f'count={count} '
-              f'stddev={stats.stddev() if count > 1 else float("NaN"):.1f} '
-              f'min={stats.minimum():.1f} '
-              f'max={stats.maximum():.1f} '
+              f'stddev={stats.stddev() if count > 1 else float("NaN"):.4g} '
+              f'min={stats.minimum():.4g} '
+              f'max={stats.maximum():.4g} '
              )
 
 def print_all_timings()->None:

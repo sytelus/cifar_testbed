@@ -197,7 +197,7 @@ def train_test(exp_name:str, exp_desc:str, epochs:int, model_name:str,
         optim = torch.optim.AdamW(net.parameters(), lr=lr, betas=betas, eps=1.0e-08,
                           weight_decay=weight_decay, amsgrad=False)
         logging.info(f'optim_type={optim_type}, '
-                     f'lr={lr}, betas=betas, weight_decay={weight_decay}')
+                     f'lr={lr}, betas={betas}, weight_decay={weight_decay}')
     else:
         raise RuntimeError(f'Unsupported LR scheduler type: {sched_type}')
 

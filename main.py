@@ -110,11 +110,11 @@ def setup_logging(filepath:Optional[str]=None, name:Optional[str]=None, level=lo
 
 def setup_cuda(seed):
     # setup cuda
-    cudnn.enabled = True
+    #cudnn.enabled = True
     np.random.seed(seed)
     torch.manual_seed(seed)
     torch.cuda.manual_seed_all(seed)
-    cudnn.benchmark = True
+    #cudnn.benchmark = True
 
 @MeasureTime
 def train_test(exp_name:str, exp_desc:str, epochs:int, model_name:str, seed:int)->float:

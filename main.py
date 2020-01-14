@@ -134,7 +134,9 @@ def setup_cuda(seed):
 @MeasureTime
 def train_test(exp_name:str, exp_desc:str, epochs:int, model_name:str, seed:int)->float:
     # config
-    lr, momentum, weight_decay = 0.025, 0.9, 3.0e-4
+    lr, momentum, weight_decay = 0.025, 0.9, 3.0e-4 # darts
+    #lr, momentum, weight_decay = 0.1, 0.9, 1.0e-4 # resnet
+
 
     # dirs
     datadir = full_path('~/torchvision_data_dir')

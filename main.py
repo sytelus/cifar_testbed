@@ -199,7 +199,7 @@ def main():
     parser.add_argument('--epochs', '-e', type=int, default=35)
     parser.add_argument('--model-name', '-m', default='resnet34')
     parser.add_argument('--seed', '-s', type=int, default=42)
-    parser.add_argument('--half', type=bool, default=False)
+    parser.add_argument('--half', action='store_true', default=False)
 
     args = parser.parse_args()
 

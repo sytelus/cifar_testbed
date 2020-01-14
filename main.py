@@ -56,9 +56,10 @@ def train_epoch(epoch, net, train_dl, device, crit, optim, sched)->float:
     for batch_idx, (inputs, targets) in enumerate(train_dl):
         inputs = inputs.to(device, non_blocking=False)
         targets = targets.to(device)
-        optim.zero_grad()
         outputs = net(inputs)
         loss = crit(outputs, targets)
+
+        optim.zero_grad()
         loss.backward()
         optim.step()
 
@@ -86,8 +87,9 @@ def test(net, test_dl, device)->float:
 @MeasureTime
 def train(epochs, train_dl, net, device, crit, optim, sched)->None:
     for epoch in range(epochs):
+        lr = optim.param_groups[0]['lr']
         acc = train_epoch(epoch, net, train_dl, device, crit, optim, sched)
-        logging.info(f'train_epoch={epoch}, prec1={acc}')
+        logging.info(f'train_epoch={epoch}, prec1={acc}, lr={lr}')
 
 
 def param_size(model:torch.nn.Module)->int:
@@ -100,7 +102,7 @@ def full_path(path:str)->str:
     path = os.path.expanduser(path)
     return os.path.abspath(path)
 
-def setup_logging(filepath:Optional[str]=None, name:Optional[str]=None, level=logging.DEBUG) -> None:
+def setup_logging(filepath:Optional[str]=None, name:Optional[str]=None, level=logging.INFO) -> None:
     logger = logging.getLogger(name)
     logger.handlers.clear()
     logger.setLevel(level)
@@ -138,14 +140,16 @@ def train_test(exp_name:str, exp_desc:str, epochs:int, model_name:str, seed:int)
     setup_logging(filepath=os.path.join(expdir, 'logs.log'))
 
     # log config for reference
-    logging.info(f'exp_name={exp_name}, exp_desc={exp_desc}')
-    logging.info(f'model_name={model_name}, seed={seed}, epochs={epochs}')
+    logging.info(f'exp_name="{exp_name}", exp_desc="{exp_desc}"')
+    logging.info(f'model_name="{model_name}", seed={seed}, epochs={epochs}')
     logging.info(f'lr={lr}, momentum={momentum}, weight_decay={weight_decay}')
-    logging.info(f'datadir={datadir}')
-    logging.info(f'expdir={expdir}')
+    logging.info(f'datadir="{datadir}"')
+    logging.info(f'expdir="{expdir}"')
 
     f = open(os.path.join(expdir, 'sysinfo.txt'), 'w')
     subprocess.Popen(['bash', './sysinfo.sh'], stdout=f, stderr=f)
+    code_filepath = os.path.join(expdir, 'code.tar')
+    subprocess.Popen(['tar', '-cf', f'{code_filepath}', '**/*.py', '**/*.yaml'])
 
     setup_cuda(seed)
 

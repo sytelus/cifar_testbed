@@ -23,7 +23,7 @@ def print_timing(name:str)->None:
     global _timings
     stats = _timings.get(name, None)
     if stats is None:
-        logging.info(f'timing_name={name}, avg=never_recorded')
+        logging.info(f'timing_name="{name}", avg=never_recorded')
     else:
         count = len(stats)
         logging.info(f'timing_name="{name}", '

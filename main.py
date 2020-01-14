@@ -57,7 +57,8 @@ def cifar10_dataloaders(datadir:str, train_num_workers=4, test_num_workers=4,
 
 # Training
 @MeasureTime
-def train_epoch(epoch, net, train_dl, device, crit, optim, sched, half)->float:
+def train_epoch(epoch, net, train_dl, device, crit, optim,
+                sched, sched_on_epoch, half)->float:
     correct, total = 0, 0
     net.train()
     for batch_idx, (inputs, targets) in enumerate(train_dl):
@@ -73,11 +74,13 @@ def train_epoch(epoch, net, train_dl, device, crit, optim, sched, half)->float:
         optim.zero_grad()
         loss.backward()
         optim.step()
+        if sched and not sched_on_epoch:
+            sched.step()
 
         _, predicted = outputs.max(1)
         total += targets.size(0)
         correct += predicted.eq(targets).sum().item()
-    if sched:
+    if sched and sched_on_epoch:
         sched.step()
     return 100.0*correct/total
 
@@ -100,13 +103,15 @@ def test(net, test_dl, device, half)->float:
     return 100.0*correct/total
 
 @MeasureTime
-def train(epochs, train_dl, net, device, crit, optim, sched, half)->None:
+def train(epochs, train_dl, net, device, crit, optim,
+          sched, sched_on_epoch, half)->None:
     if half:
         net.half()
         crit.half()
     for epoch in range(epochs):
         lr = optim.param_groups[0]['lr']
-        acc = train_epoch(epoch, net, train_dl, device, crit, optim, sched, half)
+        acc = train_epoch(epoch, net, train_dl, device, crit, optim,
+                          sched, sched_on_epoch, half)
         logging.info(f'train_epoch={epoch}, prec1={acc}, lr={lr:.4g}')
 
 
@@ -201,21 +206,28 @@ def train_test(exp_name:str, exp_desc:str, epochs:int, model_name:str,
     else:
         raise RuntimeError(f'Unsupported LR scheduler type: {sched_type}')
 
-    if sched_type=='darts':
-        sched = torch.optim.lr_scheduler.CosineAnnealingLR(optim,
-            T_max=epochs, eta_min=0.001) # darts paper
-    elif sched_type=='resnet':
-        sched = torch.optim.lr_scheduler.MultiStepLR(optim,
-            milestones=[100, 150]) # resnet original paper
-    elif sched_type=='sc':
-        sched = None
-    else:
-        raise RuntimeError(f'Unsupported LR scheduler type: {sched_type}')
-
     # load data just before train start so any errors so far is not delayed
     train_dl, test_dl = cifar10_dataloaders(datadir, cutout=cutout)
 
-    train(epochs, train_dl, net, device, crit, optim, sched, half)
+    if sched_type=='darts':
+        sched = torch.optim.lr_scheduler.CosineAnnealingLR(optim,
+            T_max=epochs, eta_min=0.001) # darts paper
+        sched_on_epoch = True
+    elif sched_type=='resnet':
+        sched = torch.optim.lr_scheduler.MultiStepLR(optim,
+            milestones=[100, 150]) # resnet original paper
+        sched_on_epoch = True
+    elif sched_type=='sc':
+        sched = torch.optim.lr_scheduler.OneCycleLR(
+            optim, 0.0001, epochs=epochs, steps_per_epoch=len(train_dl),
+            pct_start=5.0/epochs, anneal_strategy='linear'
+        )
+        sched_on_epoch = False
+    else:
+        raise RuntimeError(f'Unsupported LR scheduler type: {sched_type}')
+
+    train(epochs, train_dl, net, device, crit, optim,
+          sched, sched_on_epoch, half)
 
     return test(net, test_dl, device, half)
 

@@ -193,7 +193,7 @@ def train_test(exp_name:str, exp_desc:str, epochs:int, model_name:str,
         logging.info(f'optim_type={optim_type}, '
                      f'lr={lr}, momentum={momentum}, weight_decay={weight_decay}')
     elif optim_type=='sc': # super convergence
-        lr, betas, weight_decay = 0.001, (0.9, 0.999), 0.01
+        lr, betas, weight_decay = 0.00078125, (0.9, 0.999), 0.0005
         optim = torch.optim.AdamW(net.parameters(), lr=lr, betas=betas, eps=1.0e-08,
                           weight_decay=weight_decay, amsgrad=False)
         logging.info(f'optim_type={optim_type}, '

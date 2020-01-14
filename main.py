@@ -158,9 +158,9 @@ def main():
     parser = argparse.ArgumentParser(description='Pytorch cifasr testbed')
     parser.add_argument('--experiment-name', '-n', default='throwaway')
     parser.add_argument('--experiment-description', '-d', default='throwaway')
-    parser.add_argument('--epochs', '-e', default=35)
+    parser.add_argument('--epochs', '-e', type=int, default=35)
     parser.add_argument('--model-name', '-m', default='resnet34')
-    parser.add_argument('--seed', '-s', default=42)
+    parser.add_argument('--seed', '-s', type=int, default=42)
 
     args = parser.parse_args()
 

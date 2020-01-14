@@ -195,6 +195,7 @@ def train_test(exp_name:str, exp_desc:str, epochs:int, model_name:str,
     else:
         raise RuntimeError(f'Unsupported LR scheduler type: {sched_type}')
 
+    # load data just before train start so any errors so far is not delayed
     train_dl, test_dl = cifar10_dataloaders(datadir, cutout=cutout)
 
     train(epochs, train_dl, net, device, crit, optim, sched, half)
@@ -210,7 +211,7 @@ def main():
     parser.add_argument('--seed', '-s', type=int, default=42)
     parser.add_argument('--half', action='store_true', default=False)
     parser.add_argument('--cutout', type=int, default=0)
-    parser.add_argument('--sched_type', default='cosine')
+    parser.add_argument('--sched-type', default='cosine')
 
     args = parser.parse_args()
 

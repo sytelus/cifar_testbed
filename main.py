@@ -49,7 +49,7 @@ def train_epoch(epoch, net, train_dl, device, criterion, optimizer)->float:
     correct, total = 0, 0
     net.train()
     for batch_idx, (inputs, targets) in enumerate(train_dl):
-        inputs, targets = inputs.to(device), targets.to(device)
+        inputs, targets = inputs.to(device, non_blocking=False), targets.to(device, non_blocking=False)
         optimizer.zero_grad()
         outputs = net(inputs)
         loss = criterion(outputs, targets)
@@ -67,7 +67,7 @@ def test(net, test_dl, device)->float:
     net.eval()
     with torch.no_grad():
         for batch_idx, (inputs, targets) in enumerate(test_dl):
-            inputs, targets = inputs.to(device), targets.to(device)
+            inputs, targets = inputs.to(device, non_blocking=False), targets.to(device, non_blocking=False)
             outputs = net(inputs)
             _, predicted = outputs.max(1)
             total += targets.size(0)

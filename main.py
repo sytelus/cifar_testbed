@@ -93,7 +93,7 @@ def train(epochs, train_dl, net, device, crit, optim, sched)->None:
     for epoch in range(epochs):
         lr = optim.param_groups[0]['lr']
         acc = train_epoch(epoch, net, train_dl, device, crit, optim, sched)
-        logging.info(f'train_epoch={epoch}, prec1={acc}, lr={lr}')
+        logging.info(f'train_epoch={epoch}, prec1={acc}, lr={lr:.1e}')
 
 
 def param_size(model:torch.nn.Module)->int:

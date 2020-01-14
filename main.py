@@ -35,31 +35,36 @@ def cifar10_dataloaders(datadir:str, train_num_workers=4, test_num_workers=4) \
     train_transform = transforms.Compose(aug_transf + norm_transf)
     test_transform = transforms.Compose(norm_transf)
 
-    trainset = torchvision.datasets.CIFAR10(root=datadir, train=True, download=True, transform=train_transform)
-    train_dl = torch.utils.data.DataLoader(trainset, batch_size=128, shuffle=True, num_workers=train_num_workers, pin_memory=True)
+    trainset = torchvision.datasets.CIFAR10(root=datadir, train=True,
+        download=True, transform=train_transform)
+    train_dl = torch.utils.data.DataLoader(trainset, batch_size=128,
+        shuffle=True, num_workers=train_num_workers, pin_memory=True)
 
-    testset = torchvision.datasets.CIFAR10(root=datadir, train=False, download=True, transform=test_transform)
-    test_dl = torch.utils.data.DataLoader(testset, batch_size=1024, shuffle=False, num_workers=test_num_workers, pin_memory=True)
+    testset = torchvision.datasets.CIFAR10(root=datadir, train=False,
+        download=True, transform=test_transform)
+    test_dl = torch.utils.data.DataLoader(testset, batch_size=1024,
+        shuffle=False, num_workers=test_num_workers, pin_memory=True)
 
     return train_dl, test_dl
 
 # Training
 @MeasureTime
-def train_epoch(epoch, net, train_dl, device, criterion, optimizer)->float:
+def train_epoch(epoch, net, train_dl, device, crit, optim, sched)->float:
     correct, total = 0, 0
     net.train()
     for batch_idx, (inputs, targets) in enumerate(train_dl):
         inputs = inputs.to(device, non_blocking=False)
         targets = targets.to(device)
-        optimizer.zero_grad()
+        optim.zero_grad()
         outputs = net(inputs)
-        loss = criterion(outputs, targets)
+        loss = crit(outputs, targets)
         loss.backward()
-        optimizer.step()
+        optim.step()
 
         _, predicted = outputs.max(1)
         total += targets.size(0)
         correct += predicted.eq(targets).sum().item()
+    sched.step()
     return 100.0*correct/total
 
 @MeasureTime
@@ -78,9 +83,9 @@ def test(net, test_dl, device)->float:
     return 100.0*correct/total
 
 @MeasureTime
-def train(epochs, train_dl, net, device, criterion, optimizer)->None:
+def train(epochs, train_dl, net, device, crit, optim, sched)->None:
     for epoch in range(epochs):
-        acc = train_epoch(epoch, net, train_dl, device, criterion, optimizer)
+        acc = train_epoch(epoch, net, train_dl, device, crit, optim, sched)
         logging.info(f'train_epoch={epoch}, prec1={acc}')
 
 
@@ -147,14 +152,16 @@ def train_test(exp_name:str, exp_desc:str, epochs:int, model_name:str, seed:int)
     logging.info(f'param_size_m={param_size(net)/1E6:.1f}')
     net = net.to(device)
 
-    criterion = torch.nn.CrossEntropyLoss().to(device)
-    optimizer = torch.optim.SGD(net.parameters(), lr,
+    crit = torch.nn.CrossEntropyLoss().to(device)
+    optim = torch.optim.SGD(net.parameters(), lr,
                                     momentum=momentum,
                                     weight_decay=weight_decay)
+    sched = torch.optim.lr_scheduler.CosineAnnealingLR(optim,
+        T_max=epochs, eta_min=0.001)
 
     train_dl, test_dl = cifar10_dataloaders(datadir)
 
-    train(epochs, train_dl, net, device, criterion, optimizer)
+    train(epochs, train_dl, net, device, crit, optim, sched)
     return test(net, test_dl, device)
 
 def main():

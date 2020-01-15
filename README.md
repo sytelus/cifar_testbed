@@ -73,7 +73,10 @@ Please consider contributing!
 * Try [Ranger (RAdam+LookAhead)](https://medium.com/@lessw/new-deep-learning-optimizer-ranger-synergistic-combination-of-radam-lookahead-for-the-best-of-2dc83f79a48d)
 * Try wideresnets
 * Try cutout=8, mixup, cutmix augmentations
-* Try PyTorch 
+* Try PyTorch
+* Add [prefetching and other tricks](https://sagivtech.com/2017/09/19/optimizing-pytorch-training-code/) for speed
+* Try [NVidia Dali](https://github.com/tanglang96/DataLoaders_DALI)
+
 
 ## Credits
 

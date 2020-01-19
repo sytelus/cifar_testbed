@@ -9,7 +9,7 @@ import torch
 
 from torch_testbed.timing import MeasureTime
 from torch_testbed import cifar10_models
-from torch_testbed.dataloader_torch import cifar10_dataloaders
+from torch_testbed.dataloader_dali import cifar10_dataloaders
 from torch_testbed import utils
 
 # Training

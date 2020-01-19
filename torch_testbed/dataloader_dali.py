@@ -17,7 +17,8 @@ class HybridTrainPipe_CIFAR(Pipeline):
                  crop=32, dali_cpu=False, local_rank=0, world_size=1,
                  cutout=0, dali_device = "gpu"):
         super(HybridTrainPipe_CIFAR, self).__init__(batch_size, num_threads, device_id, seed=seed + device_id)
-        self.iterator = iter(CIFAR_INPUT_ITER(batch_size, 'train', root=data_dir))
+        self.external_data = CIFAR_INPUT_ITER(batch_size, 'train', root=data_dir)
+        self.iterator = iter(self.external_data)
         self.input = ops.ExternalSource()
         self.input_label = ops.ExternalSource()
         self.pad = ops.Paste(device=dali_device, ratio=1.25, fill_value=0)
@@ -33,9 +34,13 @@ class HybridTrainPipe_CIFAR(Pipeline):
         self.coin = ops.CoinFlip(probability=0.5)
 
     def iter_setup(self):
-        (images, labels) = self.iterator.next()
-        self.feed_input(self.jpegs, images, layout="HWC")
-        self.feed_input(self.labels, labels)
+        try:
+            (images, labels) = self.iterator.next()
+            self.feed_input(self.jpegs, images, layout="HWC")
+            self.feed_input(self.labels, labels)
+        except StopIteration:
+            self.iterator = iter(self.external_data)
+            raise StopIteration
 
     def define_graph(self):
         rng = self.coin()
@@ -52,7 +57,8 @@ class HybridValPipe_CIFAR(Pipeline):
     def __init__(self, batch_size, num_threads, device_id, data_dir, seed,
                  crop, local_rank=0, world_size=1, dali_device = "gpu"):
         super(HybridValPipe_CIFAR, self).__init__(batch_size, num_threads, device_id, seed=seed + device_id)
-        self.iterator = iter(CIFAR_INPUT_ITER(batch_size, 'val', root=data_dir))
+        self.external_data = CIFAR_INPUT_ITER(batch_size, 'val', root=data_dir)
+        self.iterator = iter(self.external_data)
         self.input = ops.ExternalSource()
         self.input_label = ops.ExternalSource()
         self.cmnp = ops.CropMirrorNormalize(device=dali_device,
@@ -64,9 +70,13 @@ class HybridValPipe_CIFAR(Pipeline):
                                             )
 
     def iter_setup(self):
-        (images, labels) = self.iterator.next()
-        self.feed_input(self.jpegs, images, layout="HWC")  # can only in HWC order
-        self.feed_input(self.labels, labels)
+        try:
+            (images, labels) = self.iterator.next()
+            self.feed_input(self.jpegs, images, layout="HWC")
+            self.feed_input(self.labels, labels)
+        except StopIteration:
+            self.iterator = iter(self.external_data)
+            raise
 
     def define_graph(self):
         self.jpegs = self.input()
@@ -89,8 +99,12 @@ class DaliLoaderWrapper:
 
     def __next__(self):
         assert self._iter
-        data = next(self._iter)
-        return data[0]["data"], data[0]["label"].squeeze().long()
+        try:
+            data = next(self._iter)
+            return data[0]["data"], data[0]["label"].squeeze().long()
+        except StopIteration:
+            self._dali_loader.reset()
+            raise
 
 class CIFAR_INPUT_ITER():
     base_folder = 'cifar-10-batches-py'
@@ -142,18 +156,24 @@ class CIFAR_INPUT_ITER():
         # TODO: shuffle?
         self.i = 0
         self.n = len(self.data)
+        self.ended = self.i >= self.n
+        if self.train:
+            self.data, self.targets = shuffle(self.data, self.targets, random_state=0)
         return self
 
     def __next__(self):
+        if self.ended:
+            raise StopIteration()
         batch = []
         labels = []
         for _ in range(self.batch_size):
-            if self.train and self.i % self.n == 0:
-                self.data, self.targets = shuffle(self.data, self.targets, random_state=0)
             img, label = self.data[self.i], self.targets[self.i]
             batch.append(img)
             labels.append(label)
-            self.i = (self.i + 1) % self.n
+            self.i += 1
+            if self.i >= self.n:
+                self.ended = True
+                self.i = self.n - 1
         return (batch, labels)
 
     next = __next__
@@ -172,7 +192,8 @@ def cifar10_dataloaders(datadir:str, train_batch_size=128, test_batch_size=1024,
                                           dali_device=dali_device,
                                           crop=32, world_size=world_size, local_rank=local_rank, cutout=cutout)
         pip_train.build()
-        dali_iter_train = DALIClassificationIterator(pip_train, size=50000 // world_size)
+        dali_iter_train = DALIClassificationIterator(pip_train, size=50000 // world_size,
+                                                     fill_last_batch = False, last_batch_padded = True)
         train_dl = DaliLoaderWrapper(dali_iter_train)
 
     if test:
@@ -184,7 +205,8 @@ def cifar10_dataloaders(datadir:str, train_batch_size=128, test_batch_size=1024,
                                       crop=32,
                                       world_size=world_size, local_rank=local_rank)
         pip_val.build()
-        dali_iter_val = DALIClassificationIterator(pip_val, size=10000 // world_size)
+        dali_iter_val = DALIClassificationIterator(pip_val, size=10000 // world_size,
+                                                   fill_last_batch = False, last_batch_padded = True)
         test_dl = DaliLoaderWrapper(dali_iter_val)
 
     return train_dl, test_dl

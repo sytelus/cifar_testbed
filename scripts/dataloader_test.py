@@ -19,16 +19,15 @@ def iter_dl(dl):
         x = x.cuda()
         y = y.cuda()
         dummy += len(x)
-        dummy += len(y)
+       # dummy += len(y)
     return dummy
 
 logging.info(f'batch_cout={len(train_dl)}')
 
 dummy = 0.0
 for _ in range(5):
-    dummy += iter_dl(train_dl)
-
-print(dummy)
+    dummy = iter_dl(train_dl)
+    print(dummy)
 
 print_all_timings()
 

@@ -8,55 +8,12 @@ import subprocess
 import csv
 
 import torch
-import torch.backends.cudnn as cudnn
-from torch.utils.data.dataloader import DataLoader
-import numpy as np
 
-import torchvision
-import torchvision.transforms as transforms
 
 from timing import MeasureTime, print_all_timings, print_timing, get_timing
 import cifar10_models
-from cutout import CutoutDefault
-
-def is_debugging()->bool:
-    return 'pydevd' in sys.modules # works for vscode
-
-@MeasureTime
-def cifar10_dataloaders(datadir:str, train_batch_size=128, test_batch_size=1024,
-                        train_num_workers=4, test_num_workers=4,
-                        cutout=0) ->Tuple[DataLoader, DataLoader]:
-    if is_debugging():
-        train_num_workers = test_num_workers = 0
-        logging.info('debugger=true, num_workers=0')
-
-    MEAN = [0.49139968, 0.48215827, 0.44653124]
-    STD = [0.24703233, 0.24348505, 0.26158768]
-    aug_transf = [
-        transforms.RandomCrop(32, padding=4),
-        transforms.RandomHorizontalFlip()
-    ]
-    norm_transf = [
-        transforms.ToTensor(),
-        transforms.Normalize(MEAN, STD)
-    ]
-
-    train_transform = transforms.Compose(aug_transf + norm_transf)
-    if cutout > 0: # must be after normalization
-        train_transform.transforms.append(CutoutDefault(cutout))
-    test_transform = transforms.Compose(norm_transf)
-
-    trainset = torchvision.datasets.CIFAR10(root=datadir, train=True,
-        download=True, transform=train_transform)
-    train_dl = torch.utils.data.DataLoader(trainset, batch_size=train_batch_size,
-        shuffle=True, num_workers=train_num_workers, pin_memory=True)
-
-    testset = torchvision.datasets.CIFAR10(root=datadir, train=False,
-        download=True, transform=test_transform)
-    test_dl = torch.utils.data.DataLoader(testset, batch_size=test_batch_size,
-        shuffle=False, num_workers=test_num_workers, pin_memory=True)
-
-    return train_dl, test_dl
+from dataloader import PrefetchDataLoader, cifar10_dataloaders
+import utils
 
 # Training
 @MeasureTime
@@ -124,46 +81,17 @@ def param_size(model:torch.nn.Module)->int:
     return sum(v.numel() for name, v in model.named_parameters() \
         if "auxiliary" not in name)
 
-def full_path(path:str)->str:
-    path = os.path.expandvars(path)
-    path = os.path.expanduser(path)
-    return os.path.abspath(path)
-
-def setup_logging(filepath:Optional[str]=None, name:Optional[str]=None, level=logging.INFO) -> None:
-    logger = logging.getLogger(name)
-    logger.handlers.clear()
-    logger.setLevel(level)
-    ch = logging.StreamHandler()
-    ch.setLevel(level)
-    formatter = logging.Formatter('[%(asctime)s][%(levelname)s] %(message)s')
-    ch.setFormatter(formatter)
-    logger.addHandler(ch)
-    logger.propagate = False # otherwise root logger prints things again
-
-    if filepath:
-        fh = logging.FileHandler(filename=full_path(filepath))
-        fh.setLevel(level)
-        fh.setFormatter(formatter)
-        logger.addHandler(fh)
-
-def setup_cuda(seed):
-    # setup cuda
-    cudnn.enabled = True
-    np.random.seed(seed)
-    torch.manual_seed(seed)
-    torch.cuda.manual_seed_all(seed)
-    cudnn.benchmark = True
 
 @MeasureTime
 def train_test(exp_name:str, exp_desc:str, epochs:int, model_name:str,
                train_batch_size:int, seed:int, half:bool, test_batch_size:int, cutout:int,
                sched_type:str, optim_type:str)->Tuple[float, float]:
     # dirs
-    datadir = full_path('~/torchvision_data_dir')
-    expdir = full_path(os.path.join('~/logdir/cifar_testbed/', exp_name))
+    datadir = utils.full_path('~/torchvision_data_dir')
+    expdir = utils.full_path(os.path.join('~/logdir/cifar_testbed/', exp_name))
     os.makedirs(datadir, exist_ok=True)
     os.makedirs(expdir, exist_ok=True)
-    setup_logging(filepath=os.path.join(expdir, 'logs.log'))
+    utils.setup_logging(filepath=os.path.join(expdir, 'logs.log'))
 
     # log config for reference
     logging.info(f'exp_name="{exp_name}", exp_desc="{exp_desc}"')
@@ -172,13 +100,13 @@ def train_test(exp_name:str, exp_desc:str, epochs:int, model_name:str,
     logging.info(f'datadir="{datadir}"')
     logging.info(f'expdir="{expdir}"')
 
-    if not is_debugging():
+    if not utils.is_debugging():
         sysinfo_filepath = os.path.join(expdir, 'sysinfo.txt')
         subprocess.Popen([f'./sysinfo.sh "{expdir}" > "{sysinfo_filepath}"'],
                          stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                          shell=True)
 
-    setup_cuda(seed)
+    utils.setup_cuda(seed)
 
     device = torch.device('cuda')
 
@@ -214,6 +142,7 @@ def train_test(exp_name:str, exp_desc:str, epochs:int, model_name:str,
     train_dl, test_dl = cifar10_dataloaders(datadir,
         train_batch_size=train_batch_size, test_batch_size=test_batch_size,
         cutout=cutout)
+    #train_dl = PrefetchDataLoader(train_dl, device)
 
     if sched_type=='darts':
         sched = torch.optim.lr_scheduler.CosineAnnealingLR(optim,
@@ -265,13 +194,13 @@ def update_results_file(results:List[Tuple[str, Any]]):
 def main():
     parser = argparse.ArgumentParser(description='Pytorch cifasr testbed')
     parser.add_argument('--experiment-name', '-n', default='throwaway')
-    parser.add_argument('--experiment-description', '-d', default='throwaway')
+    parser.add_argument('--experiment-description', '-d', default='pinmemory=true, 0 workers')
     parser.add_argument('--epochs', '-e', type=int, default=5)
     parser.add_argument('--model-name', '-m', default='resnet18')
-    parser.add_argument('--train-batch', '-b', type=int, default=128)
-    parser.add_argument('--test-batch', type=int, default=1024)
+    parser.add_argument('--train-batch', '-b', type=int, default=512)
+    parser.add_argument('--test-batch', type=int, default=4096)
     parser.add_argument('--seed', '-s', type=int, default=42)
-    parser.add_argument('--half', action='store_true', default=False)
+    parser.add_argument('--half', action='store_true', default=True)
     parser.add_argument('--cutout', type=int, default=0)
     parser.add_argument('--sched-type', default='',
                         help='LR scheduler: darts (cosine) or '

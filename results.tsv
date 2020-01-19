@@ -1,0 +1,17 @@
+test_acc	train_epoch_time	test_epoch_time	epochs	train_batch_size	test_batch_size	model_name	exp_name	exp_desc	seed	devices	half	cutout	sched_type	optim_type	train_acc
+79.93	12.979554734396515	2.380892530985875	5	128	1024	resnet18	throwaway	throwaway	42	GeForce RTX 2080 with Max-Q Design	False	0	darts	darts	79.12
+78.58	21.16349157640361	2.920728957018582	5	128	1024	resnet34	throwaway	throwaway	42	GeForce RTX 2080 with Max-Q Design	False	0	darts	darts	78.182
+78.44	13.010775357601233	2.436400516977301	5	128	1024	resnet18	throwaway	throwaway	42	GeForce RTX 2080 with Max-Q Design	False	0	darts	darts	79.036
+77.94	21.556276243791217	2.9270172719843686	5	128	1024	resnet34	throwaway	throwaway	42	GeForce RTX 2080 with Max-Q Design	False	0	darts	darts	77.102
+71.51	7.695128718391061	2.290804735996062	5	512	1024	resnet18	throwaway	throwaway	42	GeForce RTX 2080 with Max-Q Design	True	0	darts	darts	71.344
+69.93	12.567392623593332	2.268461149011273	5	512	1024	resnet34	throwaway	throwaway	42	GeForce RTX 2080 with Max-Q Design	True	0	darts	darts	69.934
+69.77	12.320570028410293	2.267455104010878	5	512	1024	resnet34	throwaway	throwaway	42	GeForce RTX 2080 with Max-Q Design	True	0	darts	darts	69.136
+68.87	12.757566675398266	2.464882772997953	5	512	1024	resnet34	throwaway	throwaway	42	GeForce RTX 2080 with Max-Q Design	True	0	darts	darts	68.53
+73.58	7.983103976590792	3.6422641800018027	5	512	4096	resnet18	throwaway	throwaway	42	GeForce RTX 2080 with Max-Q Design	True	0	darts	darts	72.814
+73.32	8.28573339600116	3.6118133359996136	5	512	4096	resnet18	throwaway	throwaway	42	GeForce RTX 2080 with Max-Q Design	True	0	darts	darts	72.714
+72.37	7.777384787803749	3.6153081849915907	5	512	4096	resnet18	throwaway	throwaway	42	GeForce RTX 2080 with Max-Q Design	True	0	darts	darts	71.478
+71.96	8.366935471008764	3.579407456010813	5	512	4096	resnet18	throwaway	pinmemory=false, 8 workers	42	GeForce RTX 2080 with Max-Q Design	True	0	darts	darts	71.402
+72.59	8.573301507206633	3.6340686379990075	5	512	4096	resnet18	throwaway	pinmemory=false, 12 workers	42	GeForce RTX 2080 with Max-Q Design	True	0	darts	darts	72.034
+71.45	15.456355910806451	3.6200979969871696	5	512	4096	resnet18	throwaway	pinmemory=true, 0 workers	42	GeForce RTX 2080 with Max-Q Design	True	0	darts	darts	71.28
+72.82	13.200424996600486	3.672413538006367	5	512	4096	resnet18	throwaway	pinmemory=true, 0 workers	42	GeForce RTX 2080 with Max-Q Design	True	0	darts	darts	71.688
+72.78	7.725791089201811	3.6350806439877488	5	512	4096	resnet18	throwaway	pinmemory=true, 0 workers	42	GeForce RTX 2080 with Max-Q Design	True	0	darts	darts	72.042

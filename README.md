@@ -61,6 +61,26 @@ Check [results folder](https://github.com/sytelus/cifar_testbed/tree/master/resu
 * Best I have got so far is 89.8% accuracy in 35 epochs, 185 seconds, 5.2s/epoch using resnet18 with darts optimizer setting and half precision.
 
 
+* On laptop: Entire cifar10 dataset can be iterated in 3.7sec +/- 1.4s (max 6.2sec) on laptop without cuda transfer, using PyTorch native dataloaders. Amazingly this time remains same with cuda. See dataloader_test.py
+* On laptop: Resnet34 model can do forward pass of a 128 batch of in memory randomly generated tensor in 0.0129sec. This is 4.878sec/epoch (cifar has 391 batches). This can be brought down to 4.196sec/epoch if we pregenerate all tensors and move to cuda. All of cifar10 tensors combined takes just 615MB in cuda! This baloons to 21.4sec/epoch when forward+backward pass is added.
+* setup_cuda, 128 batch size: 4.3s->3.3s without backward pass, 21.91s->12.38s with backward pass
+* resnet34 model_test -> 21.63s/epoch with setup_cuda and backward pass
+* 512 batch size gets 12.13s/epoch forward+backward, resnet18
+* 512 batch size + fp16 gets 2.76s/epoch forward+backward, resnet18
+* 1024 batch size + fp16 gets 2.349s/epoch forward+backward, resnet18
+* 2048 batch size + fp16 gets 2.087s/epoch forward+backward, resnet18
+* 2048*2 batch size + fp16 gets 1.948s/epoch forward+backward, resnet18
+* 2048*4 batch size + fp16 gets 1.748s/epoch forward+backward, resnet18
+* 2048*8 batch size + fp16 gets 1.687s/epoch forward+backward, resnet18
+
+* main script dataloader + backward pass, 128 batch: resnet18->12.98, resnet34->21.16
+* main script dataloader + backward pass, 512 batch + fp16: resnet18->7.695, resnet34->12.57
+* main script dataloader + backward pass, 512 batch + fp16 + 0 workers: resnet18->15.46
+* main script dataloader + backward pass, 512 batch + fp16 + 1 workers: resnet18->13.2
+* main script dataloader + backward pass, 512 batch + fp16 + 2 workers: resnet18->7.726
+
+
+
 ## Work-In-Progress
 
 Please consider contributing!

@@ -65,7 +65,7 @@ def main():
                      args.seed, args.half, args.test_batch, args.loader,
                      args.cutout, args.sched_type, args.optim_type)
     print_all_timings()
-    logging.info(f'test_accuracy={train_acc}')
+    logging.info(f'test_accuracy={test_acc}')
     print_timing('train_epoch')
 
     results = [

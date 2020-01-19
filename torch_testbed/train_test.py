@@ -19,8 +19,8 @@ def train_epoch(epoch, net, train_dl, device, crit, optim,
     correct, total = 0, 0
     net.train()
     for batch_idx, (inputs, targets) in enumerate(train_dl):
-        inputs = inputs.to(device, non_blocking=False)
-        targets = targets.to(device)
+        inputs = inputs.to(device, non_blocking=True)
+        targets = targets.to(device, non_blocking=True)
 
         if half:
             inputs = inputs.half()

@@ -1,14 +1,23 @@
+import logging
+
 import torch
 import numpy as np
-
 from torch_testbed import utils, cifar10_models
 from torch_testbed.timing import MeasureTime, print_all_timings, print_timing, get_timing
+from torch_testbed.dataloader_dali import cifar10_dataloaders
+
 
 utils.setup_logging()
 utils.setup_cuda(42)
 
 batch_size = 512
 half = True
+
+datadir = utils.full_path('~/torchvision_data_dir')
+train_dl, test_dl = cifar10_dataloaders(datadir,
+    train_batch_size=batch_size, test_batch_size=1024,
+    cutout=0)
+
 model = cifar10_models.resnet18().cuda()
 lr, momentum, weight_decay = 0.025, 0.9, 3.0e-4
 optim = torch.optim.SGD(model.parameters(),
@@ -20,9 +29,10 @@ if half:
     crit = crit.half()
 
 @MeasureTime
-def iter_dl(ts):
+def iter_dl(dl):
     i, d = 0, 0
-    for x, l in ts:
+    for x, l in dl:
+        #x, l = x.cuda().half() if half else x.cuda(), l.cuda()
         y = model(x)
         loss = crit(y, l)
         optim.zero_grad()
@@ -32,12 +42,10 @@ def iter_dl(ts):
         d += len(x)
     return i, d
 
+data = [(x.cuda().half() if half else x.cuda(), l.cuda()) for x,l in train_dl]
 for _ in range(5):
-    train_dl = [(torch.rand(batch_size, 3, 12, 12).cuda() \
-                if not half else torch.rand(batch_size, 3, 12, 12).cuda().half(), \
-            torch.LongTensor(batch_size).random_(0, 10).cuda()) \
-            for _ in range(round(50000/batch_size))]
-    i,d = iter_dl(train_dl)
+    i,d = iter_dl(data)
+
 
 print_all_timings()
 print(i, d)

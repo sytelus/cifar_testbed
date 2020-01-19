@@ -42,7 +42,7 @@ def print_all_timings()->None:
     for name in _timings.keys():
         print_timing(name)
 
-def clear() -> None:
+def clear_timings() -> None:
     global _timings
     _timings.clear()
 

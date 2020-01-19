@@ -179,14 +179,14 @@ class CIFAR_INPUT_ITER():
     next = __next__
 
 def cifar10_dataloaders(datadir:str, train_batch_size=128, test_batch_size=1024,
-                        cutout=0, seed=42, num_threads=4,
-                        local_rank=0, world_size=1,
+                        train_num_workers=4, test_num_workers=4,
+                        cutout=0, seed=42, local_rank=0, world_size=1,
                         train=True, test=True, dali_device='gpu'):
 
     train_dl, test_dl = None, None
     if train:
         pip_train = HybridTrainPipe_CIFAR(batch_size=train_batch_size, seed=seed,
-                                          num_threads=num_threads,
+                                          num_threads=train_num_workers,
                                           device_id=local_rank,
                                           data_dir=datadir,
                                           dali_device=dali_device,
@@ -198,7 +198,7 @@ def cifar10_dataloaders(datadir:str, train_batch_size=128, test_batch_size=1024,
 
     if test:
         pip_val = HybridValPipe_CIFAR(batch_size=test_batch_size,
-                                      num_threads=num_threads,
+                                      num_threads=test_num_workers,
                                       device_id=local_rank,
                                       data_dir=datadir, seed=seed,
                                       dali_device=dali_device,

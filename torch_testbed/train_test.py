@@ -1,3 +1,4 @@
+from argparse import ArgumentError
 from typing import List, Tuple, Any
 from collections import OrderedDict
 import os
@@ -9,7 +10,6 @@ import torch
 
 from torch_testbed.timing import MeasureTime
 from torch_testbed import cifar10_models
-from torch_testbed.dataloader_dali import cifar10_dataloaders
 from torch_testbed import utils
 
 # Training
@@ -81,8 +81,17 @@ def param_size(model:torch.nn.Module)->int:
 
 @MeasureTime
 def train_test(exp_name:str, exp_desc:str, epochs:int, model_name:str,
-               train_batch_size:int, seed:int, half:bool, test_batch_size:int, cutout:int,
+               train_batch_size:int, loader_workers:int, seed:int, half:bool, test_batch_size:int,
+               loader:str, cutout:int,
                sched_type:str, optim_type:str)->Tuple[float, float]:
+
+    if loader=='auto' or loader=='torch':
+        import torch_testbed.dataloader_torch as dlm
+    elif loader=='dali':
+        import torch_testbed.dataloader_dali as dlm
+    else:
+        raise ArgumentError(f'data loader type "{loader}" is not recognized')
+
     # dirs
     datadir = utils.full_path('~/torchvision_data_dir')
     expdir = utils.full_path(os.path.join('~/logdir/cifar_testbed/', exp_name))
@@ -136,8 +145,9 @@ def train_test(exp_name:str, exp_desc:str, epochs:int, model_name:str,
         raise RuntimeError(f'Unsupported LR scheduler type: {sched_type}')
 
     # load data just before train start so any errors so far is not delayed
-    train_dl, test_dl = cifar10_dataloaders(datadir,
+    train_dl, test_dl = dlm.cifar10_dataloaders(datadir,
         train_batch_size=train_batch_size, test_batch_size=test_batch_size,
+        train_num_workers=loader_workers, test_num_workers=loader_workers,
         cutout=cutout)
     #train_dl = PrefetchDataLoader(train_dl, device)
 

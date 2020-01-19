@@ -1,9 +1,11 @@
 import logging
 
 import torch
+import torch.backends.cudnn as cudnn
 import numpy as np
+
 from torch_testbed import utils, cifar10_models
-from torch_testbed.timing import MeasureTime, print_all_timings, print_timing, get_timing
+from torch_testbed.timing import MeasureTime, print_all_timings, print_timing, get_timing, clear_timings
 from torch_testbed.dataloader_dali import cifar10_dataloaders
 
 
@@ -41,6 +43,20 @@ def iter_dl(dl):
         i += 1
         d += len(x)
     return i, d
+
+def warm_up(epochs):
+    for _ in range(epochs):
+        train_dl = [(torch.rand(batch_size, 3, 12, 12).cuda() \
+                if not half else torch.rand(batch_size, 3, 12, 12).cuda().half(), \
+            torch.LongTensor(batch_size).random_(0, 10).cuda()) \
+            for _ in range(round(50000/batch_size))]
+        i,d = iter_dl(train_dl)
+
+# warm_up(5)
+# cudnn.benchmark = False
+
+print_all_timings()
+clear_timings()
 
 for _ in range(5):
     i,d = iter_dl(train_dl)

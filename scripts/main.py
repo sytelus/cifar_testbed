@@ -10,10 +10,10 @@ import csv
 import torch
 
 
-from timing import MeasureTime, print_all_timings, print_timing, get_timing
-import cifar10_models
-from dataloader import PrefetchDataLoader, cifar10_dataloaders
-import utils
+from torch_testbed.timing import MeasureTime, print_all_timings, print_timing, get_timing
+from torch_testbed import cifar10_models
+from torch_testbed.dataloader import cifar10_dataloaders
+from torch_testbed import utils
 
 # Training
 @MeasureTime

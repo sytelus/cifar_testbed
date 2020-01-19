@@ -6,9 +6,9 @@ from torch.utils.data import DataLoader
 import torchvision
 import torchvision.transforms as transforms
 
-import utils
-from timing import MeasureTime, print_all_timings, print_timing, get_timing
-from cutout import CutoutDefault
+from . import utils
+from .timing import MeasureTime, print_all_timings, print_timing, get_timing
+from .cutout import CutoutDefault
 
 
 def cifar10_transform(aug:bool, cutout=0):

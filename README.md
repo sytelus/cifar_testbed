@@ -12,37 +12,35 @@ This repo is born out of my frustration of not having a good standard PyTorch co
 - Simple experiment management, folder with all artifacts and logging
 - Report timings for performance analysis
 - Half precision support for newer GPUs
-- Mostly just one script file
+
 
 ## Non-Features
 
-To keep code minimal and simple, below are NOT implemented and I have no plans to add these features:
+To keep code minimal, fast and simple below are currently not implemented:
 
 - Tensorboard support
 - Distributed or multi-gpu
 - Checkpointing
 
 ## Install
-
-There is only one dependency:
+From the repo directory, run:
 
 ```
-pip install runstats
+pip install -e .
 ```
-This project is not a module so no need to do anything else.
 
 ## Use
 
 Run resnet34 model with optimizer and scheduler as in resnet original paper:
 
 ```
-python main.py --optim-sched resnet --experiment-name resnet_paper
+python scripts/main.py --optim-sched resnet --experiment-name resnet_paper
 ```
 
 Run resnet18 model with optimizer as in resnet paper but scheduler as in darts paper with **half precision** and `cutout` augmentation of size 8:
 
 ```
-python main.py --optim-type resnet --sched-type darts --half --cutout 8
+python scripts/main.py --optim-type resnet --sched-type darts --half --cutout 8
 ```
 
 ## Initial Results
@@ -61,7 +59,9 @@ Check [results folder](https://github.com/sytelus/cifar_testbed/tree/master/resu
 * Best I have got so far is 89.8% accuracy in 35 epochs, 185 seconds, 5.2s/epoch using resnet18 with darts optimizer setting and half precision.
 
 
-* On laptop: Entire cifar10 dataset can be iterated in 3.7sec +/- 1.4s (max 6.2sec) on laptop without cuda transfer, using PyTorch native dataloaders. Amazingly this time remains same with cuda. See dataloader_test.py
+### On laptop:
+
+* Entire cifar10 dataset can be iterated in 3.7sec +/- 1.4s (max 6.2sec) on laptop without cuda transfer, using PyTorch native dataloaders. Amazingly this time remains same with cuda. See dataloader_test.py
 * On laptop: Resnet34 model can do forward pass of a 128 batch of in memory randomly generated tensor in 0.0129sec. This is 4.878sec/epoch (cifar has 391 batches). This can be brought down to 4.196sec/epoch if we pregenerate all tensors and move to cuda. All of cifar10 tensors combined takes just 615MB in cuda! This baloons to 21.4sec/epoch when forward+backward pass is added.
 * setup_cuda, 128 batch size: 4.3s->3.3s without backward pass, 21.91s->12.38s with backward pass
 * resnet34 model_test -> 21.63s/epoch with setup_cuda and backward pass

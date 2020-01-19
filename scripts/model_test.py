@@ -1,16 +1,15 @@
-from dataloader import cifar10_dataloaders
 import torch
 import numpy as np
-import utils
-from timing import MeasureTime, print_all_timings, print_timing, get_timing
-import cifar10_models
+
+from torch_testbed import utils, cifar10_models
+from torch_testbed.timing import MeasureTime, print_all_timings, print_timing, get_timing
 
 utils.setup_logging()
 
 #utils.setup_cuda(42)
 
-batch_size = 2048*16
-half = True
+batch_size = 128
+half = False
 model = cifar10_models.resnet18().cuda()
 lr, momentum, weight_decay = 0.025, 0.9, 3.0e-4
 optim = torch.optim.SGD(model.parameters(),

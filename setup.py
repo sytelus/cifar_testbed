@@ -8,7 +8,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="torch_testbed",
-    version="0.2",
+    version="0.4.0",
     author="Shital Shah",
     author_email="shitals@microsoft.com",
     description="Simple clean code to experiment with PyTorch",

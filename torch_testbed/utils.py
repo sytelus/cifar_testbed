@@ -40,3 +40,6 @@ def setup_cuda(seed):
     torch.manual_seed(seed)
     torch.cuda.manual_seed_all(seed)
     cudnn.benchmark = True
+
+def cuda_device_names()->str:
+    return ', '.join([torch.cuda.get_device_name(i) for i in range(torch.cuda.device_count())])

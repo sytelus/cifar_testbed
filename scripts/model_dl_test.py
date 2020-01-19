@@ -32,7 +32,7 @@ if half:
 def iter_dl(dl):
     i, d = 0, 0
     for x, l in dl:
-        #x, l = x.cuda().half() if half else x.cuda(), l.cuda()
+        x, l = x.cuda().half() if half else x.cuda(), l.cuda()
         y = model(x)
         loss = crit(y, l)
         optim.zero_grad()

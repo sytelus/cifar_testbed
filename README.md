@@ -25,6 +25,12 @@ To keep code minimal, fast and simple below are currently not implemented:
 ## Install
 From the repo directory, run:
 
+Install NVidia Dali. Assuming you have CUDA 10.0 this can be done by,
+
+```
+pip install --extra-index-url https://developer.download.nvidia.com/compute/redist/cuda/10.0 nvidia-dali
+```
+
 ```
 pip install -e .
 ```
@@ -97,10 +103,11 @@ Please consider contributing!
 * Try PyTorch
 * Add [prefetching and other tricks](https://sagivtech.com/2017/09/19/optimizing-pytorch-training-code/) for speed
 * Try [NVidia Dali](https://github.com/tanglang96/DataLoaders_DALI)
-
+* Use apex instead of .half()
 
 ## Credits
 
 * [This repo](https://github.com/akamaster/pytorch_resnet_cifar10) was my starting point as well as provided baseline for resnet.
 * cifar10 converted models for torch vision comes from [this repo](https://github.com/huyvnphan/PyTorch-CIFAR10) by Huy Phan.
 * [This repo](https://github.com/kentaroy47/pytorch-cifar10-fp16) has benchmarks for some fp16 experiments.
+* https://towardsdatascience.com/diving-into-dali-1c30c28731c0

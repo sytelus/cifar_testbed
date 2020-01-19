@@ -1,6 +1,6 @@
 import logging
 
-from torch_testbed.dataloader_torch import cifar10_dataloaders
+from torch_testbed.dataloader_dali import cifar10_dataloaders
 from torch_testbed import utils
 from torch_testbed.timing import MeasureTime, print_all_timings, print_timing, get_timing
 

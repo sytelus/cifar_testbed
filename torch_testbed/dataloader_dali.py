@@ -1,31 +1,29 @@
 import os
 import sys
 import time
-import torch
 import pickle
 import numpy as np
 import nvidia.dali.ops as ops
 import nvidia.dali.types as types
 from sklearn.utils import shuffle
-from torchvision.datasets import CIFAR10
 from nvidia.dali.pipeline import Pipeline
-import torchvision.transforms as transforms
 from nvidia.dali.plugin.pytorch import DALIClassificationIterator, DALIGenericIterator
+
+from torch.utils.data.dataloader import DataLoader
 
 
 class HybridTrainPipe_CIFAR(Pipeline):
-    def __init__(self, batch_size, num_threads, device_id, data_dir, crop=32, dali_cpu=False, local_rank=0,
-                 world_size=1,
-                 cutout=0):
-        super(HybridTrainPipe_CIFAR, self).__init__(batch_size, num_threads, device_id, seed=12 + device_id)
+    def __init__(self, batch_size, num_threads, device_id, data_dir, seed,
+                 crop=32, dali_cpu=False, local_rank=0, world_size=1,
+                 cutout=0, dali_device = "gpu"):
+        super(HybridTrainPipe_CIFAR, self).__init__(batch_size, num_threads, device_id, seed=seed + device_id)
         self.iterator = iter(CIFAR_INPUT_ITER(batch_size, 'train', root=data_dir))
-        dali_device = "gpu"
         self.input = ops.ExternalSource()
         self.input_label = ops.ExternalSource()
         self.pad = ops.Paste(device=dali_device, ratio=1.25, fill_value=0)
         self.uniform = ops.Uniform(range=(0., 1.))
         self.crop = ops.Crop(device=dali_device, crop_h=crop, crop_w=crop)
-        self.cmnp = ops.CropMirrorNormalize(device="gpu",
+        self.cmnp = ops.CropMirrorNormalize(device=dali_device,
                                             output_dtype=types.FLOAT,
                                             output_layout=types.NCHW,
                                             image_type=types.RGB,
@@ -36,7 +34,7 @@ class HybridTrainPipe_CIFAR(Pipeline):
 
     def iter_setup(self):
         (images, labels) = self.iterator.next()
-        self.feed_input(self.jpegs, images)
+        self.feed_input(self.jpegs, images, layout="HWC")
         self.feed_input(self.labels, labels)
 
     def define_graph(self):
@@ -51,12 +49,13 @@ class HybridTrainPipe_CIFAR(Pipeline):
 
 
 class HybridValPipe_CIFAR(Pipeline):
-    def __init__(self, batch_size, num_threads, device_id, data_dir, crop, size, local_rank=0, world_size=1):
-        super(HybridValPipe_CIFAR, self).__init__(batch_size, num_threads, device_id, seed=12 + device_id)
+    def __init__(self, batch_size, num_threads, device_id, data_dir, seed,
+                 crop, local_rank=0, world_size=1, dali_device = "gpu"):
+        super(HybridValPipe_CIFAR, self).__init__(batch_size, num_threads, device_id, seed=seed + device_id)
         self.iterator = iter(CIFAR_INPUT_ITER(batch_size, 'val', root=data_dir))
         self.input = ops.ExternalSource()
         self.input_label = ops.ExternalSource()
-        self.cmnp = ops.CropMirrorNormalize(device="gpu",
+        self.cmnp = ops.CropMirrorNormalize(device=dali_device,
                                             output_dtype=types.FLOAT,
                                             output_layout=types.NCHW,
                                             image_type=types.RGB,
@@ -66,7 +65,7 @@ class HybridValPipe_CIFAR(Pipeline):
 
     def iter_setup(self):
         (images, labels) = self.iterator.next()
-        self.feed_input(self.jpegs, images)  # can only in HWC order
+        self.feed_input(self.jpegs, images, layout="HWC")  # can only in HWC order
         self.feed_input(self.labels, labels)
 
     def define_graph(self):
@@ -76,6 +75,22 @@ class HybridValPipe_CIFAR(Pipeline):
         output = self.cmnp(output.gpu())
         return [output, self.labels]
 
+class DaliLoaderWrapper:
+    def __init__(self, dali_loader):
+        self._dali_loader = dali_loader
+        self._iter = None
+
+    def __iter__(self):
+        self._iter = iter(self._dali_loader)
+        return self
+
+    def __len__(self):
+        return self._dali_loader._size
+
+    def __next__(self):
+        assert self._iter
+        data = next(self._iter)
+        return data[0]["data"], data[0]["label"].squeeze().long()
 
 class CIFAR_INPUT_ITER():
     base_folder = 'cifar-10-batches-py'
@@ -117,11 +132,14 @@ class CIFAR_INPUT_ITER():
 
         self.data = np.vstack(self.data).reshape(-1, 3, 32, 32)
         self.targets = np.vstack(self.targets)
-        self.data = self.data.transpose((0, 2, 3, 1))  # convert to HWC
-        np.save("cifar.npy", self.data)
-        self.data = np.load('cifar.npy')  # to serialize, increase locality
+        self.data = self.data.transpose((0, 2, 3, 1)).copy()  # convert to HWC
+
+        # TODO: measure perf for below
+        # np.save("cifar.npy", self.data)
+        # self.data = np.load('cifar.npy')  # to serialize, increase locality
 
     def __iter__(self):
+        # TODO: shuffle?
         self.i = 0
         self.n = len(self.data)
         return self
@@ -140,69 +158,33 @@ class CIFAR_INPUT_ITER():
 
     next = __next__
 
+def cifar10_dataloaders(datadir:str, train_batch_size=128, test_batch_size=1024,
+                        cutout=0, seed=42, num_threads=4,
+                        local_rank=0, world_size=1,
+                        train=True, test=True, dali_device='gpu'):
 
-def get_cifar_iter_dali(type, image_dir, batch_size, num_threads, local_rank=0, world_size=1, val_size=32, cutout=0):
-    if type == 'train':
-        pip_train = HybridTrainPipe_CIFAR(batch_size=batch_size, num_threads=num_threads, device_id=local_rank,
-                                          data_dir=image_dir,
+    train_dl, test_dl = None, None
+    if train:
+        pip_train = HybridTrainPipe_CIFAR(batch_size=train_batch_size, seed=seed,
+                                          num_threads=num_threads,
+                                          device_id=local_rank,
+                                          data_dir=datadir,
+                                          dali_device=dali_device,
                                           crop=32, world_size=world_size, local_rank=local_rank, cutout=cutout)
         pip_train.build()
         dali_iter_train = DALIClassificationIterator(pip_train, size=50000 // world_size)
-        return dali_iter_train
+        train_dl = DaliLoaderWrapper(dali_iter_train)
 
-    elif type == 'val':
-        pip_val = HybridValPipe_CIFAR(batch_size=batch_size, num_threads=num_threads, device_id=local_rank,
-                                      data_dir=image_dir,
-                                      crop=32, size=val_size, world_size=world_size, local_rank=local_rank)
+    if test:
+        pip_val = HybridValPipe_CIFAR(batch_size=test_batch_size,
+                                      num_threads=num_threads,
+                                      device_id=local_rank,
+                                      data_dir=datadir, seed=seed,
+                                      dali_device=dali_device,
+                                      crop=32,
+                                      world_size=world_size, local_rank=local_rank)
         pip_val.build()
         dali_iter_val = DALIClassificationIterator(pip_val, size=10000 // world_size)
-        return dali_iter_val
+        test_dl = DaliLoaderWrapper(dali_iter_val)
 
-
-def get_cifar_iter_torch(type, image_dir, batch_size, num_threads, cutout=0):
-    CIFAR_MEAN = [0.49139968, 0.48215827, 0.44653124]
-    CIFAR_STD = [0.24703233, 0.24348505, 0.26158768]
-    if type == 'train':
-        transform_train = transforms.Compose([
-            transforms.RandomCrop(32, padding=4),
-            transforms.RandomHorizontalFlip(),
-            transforms.ToTensor(),
-            transforms.Normalize(CIFAR_MEAN, CIFAR_STD),
-        ])
-        train_dst = CIFAR10(root=image_dir, train=True, download=True, transform=transform_train)
-        train_iter = torch.utils.data.DataLoader(train_dst, batch_size=batch_size, shuffle=True, pin_memory=True,
-                                                 num_workers=num_threads)
-        return train_iter
-    else:
-        transform_test = transforms.Compose([
-            transforms.ToTensor(),
-            transforms.Normalize(CIFAR_MEAN, CIFAR_STD),
-        ])
-        test_dst = CIFAR10(root=image_dir, train=False, download=True, transform=transform_test)
-        test_iter = torch.utils.data.DataLoader(test_dst, batch_size=batch_size, shuffle=False, pin_memory=True,
-                                                num_workers=num_threads)
-        return test_iter
-
-
-if __name__ == '__main__':
-    train_loader = get_cifar_iter_dali(type='train', image_dir='/userhome/memory_data/cifar10', batch_size=256,
-                                       num_threads=4)
-    print('start iterate')
-    start = time.time()
-    for i, data in enumerate(train_loader):
-        images = data[0]["data"].cuda(non_blocking=True)
-        labels = data[0]["label"].squeeze().long().cuda(non_blocking=True)
-    end = time.time()
-    print('end iterate')
-    print('dali iterate time: %fs' % (end - start))
-
-    train_loader = get_cifar_iter_torch(type='train', image_dir='/userhome/memory_data/cifar10', batch_size=256,
-                                        num_threads=4)
-    print('start iterate')
-    start = time.time()
-    for i, data in enumerate(train_loader):
-        images = data[0].cuda(non_blocking=True)
-        labels = data[1].cuda(non_blocking=True)
-    end = time.time()
-    print('end iterate')
-    print('dali iterate time: %fs' % (end - start))
+    return train_dl, test_dl

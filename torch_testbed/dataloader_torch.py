@@ -32,9 +32,10 @@ def cifar10_transform(aug:bool, cutout=0):
 
     return transforms.Compose(transf)
 
-def get_dataloaders(datadir:str, train_batch_size=128, test_batch_size=1024,
-                        train_num_workers=4, test_num_workers=4,
-                        cutout=0) ->Tuple[DataLoader, DataLoader]:
+@MeasureTime
+def cifar10_dataloaders(datadir:str, train_batch_size=128, test_batch_size=1024,
+                    cutout=0, train_num_workers=4, test_num_workers=4)\
+                        ->Tuple[DataLoader, DataLoader]:
     if utils.is_debugging():
         train_num_workers = test_num_workers = 0
         logging.info('debugger=true, num_workers=0')
@@ -46,43 +47,6 @@ def get_dataloaders(datadir:str, train_batch_size=128, test_batch_size=1024,
         shuffle=True, num_workers=train_num_workers, pin_memory=True)
 
     test_transform = cifar10_transform(aug=False, cutout=0)
-    testset = torchvision.datasets.CIFAR10(root=datadir, train=False,
-        download=True, transform=test_transform)
-    test_dl = torch.utils.data.DataLoader(testset, batch_size=test_batch_size,
-        shuffle=False, num_workers=test_num_workers, pin_memory=True)
-
-    return train_dl, test_dl
-
-
-@MeasureTime
-def cifar10_dataloaders(datadir:str, train_batch_size=128, test_batch_size=1024,
-                        train_num_workers=4, test_num_workers=4,
-                        cutout=0) ->Tuple[DataLoader, DataLoader]:
-    if utils.is_debugging():
-        train_num_workers = test_num_workers = 0
-        logging.info('debugger=true, num_workers=0')
-
-    MEAN = [0.49139968, 0.48215827, 0.44653124]
-    STD = [0.24703233, 0.24348505, 0.26158768]
-    aug_transf = [
-        transforms.RandomCrop(32, padding=4),
-        transforms.RandomHorizontalFlip()
-    ]
-    norm_transf = [
-        transforms.ToTensor(),
-        transforms.Normalize(MEAN, STD)
-    ]
-
-    train_transform = transforms.Compose(aug_transf + norm_transf)
-    if cutout > 0: # must be after normalization
-        train_transform.transforms.append(CutoutDefault(cutout))
-    test_transform = transforms.Compose(norm_transf)
-
-    trainset = torchvision.datasets.CIFAR10(root=datadir, train=True,
-        download=True, transform=train_transform)
-    train_dl = torch.utils.data.DataLoader(trainset, batch_size=train_batch_size,
-        shuffle=True, num_workers=train_num_workers, pin_memory=True)
-
     testset = torchvision.datasets.CIFAR10(root=datadir, train=False,
         download=True, transform=test_transform)
     test_dl = torch.utils.data.DataLoader(testset, batch_size=test_batch_size,

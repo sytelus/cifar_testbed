@@ -42,10 +42,8 @@ def iter_dl(dl):
         d += len(x)
     return i, d
 
-data = [(x.cuda().half() if half else x.cuda(), l.cuda()) for x,l in train_dl]
 for _ in range(5):
-    i,d = iter_dl(data)
-
+    i,d = iter_dl(train_dl)
 
 print_all_timings()
 print(i, d)

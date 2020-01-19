@@ -19,6 +19,9 @@ def add_timing(name:str, elapsed:float, no_print=True)->Statistics:
         logging.info('Timing "{}": {}s'.format(name, elapsed))
     return stats
 
+def get_timing(name:str)->Statistics:
+    return _timings.get(name)
+
 def print_timing(name:str)->None:
     global _timings
     stats = _timings.get(name, None)

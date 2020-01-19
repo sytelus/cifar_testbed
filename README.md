@@ -60,6 +60,7 @@ Check [results folder](https://github.com/sytelus/cifar_testbed/tree/master/resu
 * AdamW with no sched and defaults (or from paper) gives samilar result as resnet settings (88.9) but epoch @ 14s
 * Best I have got so far is 89.8% accuracy in 35 epochs, 185 seconds, 5.2s/epoch using resnet18 with darts optimizer setting and half precision.
 
+
 ## Work-In-Progress
 
 Please consider contributing!

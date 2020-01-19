@@ -1,9 +1,11 @@
-from typing import Optional, Tuple
+from typing import List, Optional, Tuple, Any
+from collections import OrderedDict
 import os
 import sys
 import logging
 import argparse
 import subprocess
+import csv
 
 import torch
 import torch.backends.cudnn as cudnn
@@ -13,7 +15,7 @@ import numpy as np
 import torchvision
 import torchvision.transforms as transforms
 
-from timing import MeasureTime, print_all_timings
+from timing import MeasureTime, print_all_timings, print_timing, get_timing
 import cifar10_models
 from cutout import CutoutDefault
 
@@ -21,7 +23,8 @@ def is_debugging()->bool:
     return 'pydevd' in sys.modules # works for vscode
 
 @MeasureTime
-def cifar10_dataloaders(datadir:str, train_num_workers=4, test_num_workers=4,
+def cifar10_dataloaders(datadir:str, train_batch_size=128, test_batch_size=1024,
+                        train_num_workers=4, test_num_workers=4,
                         cutout=0) ->Tuple[DataLoader, DataLoader]:
     if is_debugging():
         train_num_workers = test_num_workers = 0
@@ -45,12 +48,12 @@ def cifar10_dataloaders(datadir:str, train_num_workers=4, test_num_workers=4,
 
     trainset = torchvision.datasets.CIFAR10(root=datadir, train=True,
         download=True, transform=train_transform)
-    train_dl = torch.utils.data.DataLoader(trainset, batch_size=128,
+    train_dl = torch.utils.data.DataLoader(trainset, batch_size=train_batch_size,
         shuffle=True, num_workers=train_num_workers, pin_memory=True)
 
     testset = torchvision.datasets.CIFAR10(root=datadir, train=False,
         download=True, transform=test_transform)
-    test_dl = torch.utils.data.DataLoader(testset, batch_size=1024,
+    test_dl = torch.utils.data.DataLoader(testset, batch_size=test_batch_size,
         shuffle=False, num_workers=test_num_workers, pin_memory=True)
 
     return train_dl, test_dl
@@ -104,16 +107,17 @@ def test(net, test_dl, device, half)->float:
 
 @MeasureTime
 def train(epochs, train_dl, net, device, crit, optim,
-          sched, sched_on_epoch, half)->None:
+          sched, sched_on_epoch, half)->float:
     if half:
         net.half()
         crit.half()
+    acc = 0.0
     for epoch in range(epochs):
         lr = optim.param_groups[0]['lr']
         acc = train_epoch(epoch, net, train_dl, device, crit, optim,
                           sched, sched_on_epoch, half)
         logging.info(f'train_epoch={epoch}, prec1={acc}, lr={lr:.4g}')
-
+    return acc
 
 def param_size(model:torch.nn.Module)->int:
     """count all parameters excluding auxiliary"""
@@ -152,8 +156,8 @@ def setup_cuda(seed):
 
 @MeasureTime
 def train_test(exp_name:str, exp_desc:str, epochs:int, model_name:str,
-               seed:int, half:bool, cutout:int,
-               sched_type:str, optim_type:str)->float:
+               train_batch_size:int, seed:int, half:bool, test_batch_size:int, cutout:int,
+               sched_type:str, optim_type:str)->Tuple[float, float]:
     # dirs
     datadir = full_path('~/torchvision_data_dir')
     expdir = full_path(os.path.join('~/logdir/cifar_testbed/', exp_name))
@@ -207,7 +211,9 @@ def train_test(exp_name:str, exp_desc:str, epochs:int, model_name:str,
         raise RuntimeError(f'Unsupported LR scheduler type: {sched_type}')
 
     # load data just before train start so any errors so far is not delayed
-    train_dl, test_dl = cifar10_dataloaders(datadir, cutout=cutout)
+    train_dl, test_dl = cifar10_dataloaders(datadir,
+        train_batch_size=train_batch_size, test_batch_size=test_batch_size,
+        cutout=cutout)
 
     if sched_type=='darts':
         sched = torch.optim.lr_scheduler.CosineAnnealingLR(optim,
@@ -226,39 +232,89 @@ def train_test(exp_name:str, exp_desc:str, epochs:int, model_name:str,
     else:
         raise RuntimeError(f'Unsupported LR scheduler type: {sched_type}')
 
-    train(epochs, train_dl, net, device, crit, optim,
+    train_acc = train(epochs, train_dl, net, device, crit, optim,
           sched, sched_on_epoch, half)
+    test_acc = test(net, test_dl, device, half)
+    return train_acc, test_acc
 
-    return test(net, test_dl, device, half)
+def cuda_device_names()->str:
+    return ', '.join([torch.cuda.get_device_name(i) for i in range(torch.cuda.device_count())])
+
+def update_results_file(results:List[Tuple[str, Any]]):
+    fieldnames, rows = [], []
+    if os.path.exists('./results.tsv'):
+        with open('./results.tsv', 'r') as f:
+            dr = csv.DictReader(f, delimiter='\t')
+            fieldnames = dr.fieldnames
+            rows = [row for row in dr.reader]
+    if fieldnames is None:
+        fieldnames = []
+
+    new_fieldnames = OrderedDict([(fn, None) for fn, v in results])
+    for fn in fieldnames:
+        new_fieldnames[fn]=None
+
+    with open('./results.tsv', 'w') as f:
+        dr = csv.DictWriter(f, fieldnames=new_fieldnames.keys(), delimiter='\t')
+        dr.writeheader()
+        for row in rows:
+            dr.writerow(dict((k,v) for k,v in zip(fieldnames, row)))
+        dr.writerow(OrderedDict(results))
+
 
 def main():
     parser = argparse.ArgumentParser(description='Pytorch cifasr testbed')
     parser.add_argument('--experiment-name', '-n', default='throwaway')
     parser.add_argument('--experiment-description', '-d', default='throwaway')
-    parser.add_argument('--epochs', '-e', type=int, default=35)
-    parser.add_argument('--model-name', '-m', default='resnet34')
+    parser.add_argument('--epochs', '-e', type=int, default=5)
+    parser.add_argument('--model-name', '-m', default='resnet18')
+    parser.add_argument('--train-batch', '-b', type=int, default=128)
+    parser.add_argument('--test-batch', type=int, default=1024)
     parser.add_argument('--seed', '-s', type=int, default=42)
     parser.add_argument('--half', action='store_true', default=False)
     parser.add_argument('--cutout', type=int, default=0)
     parser.add_argument('--sched-type', default='',
                         help='LR scheduler: darts (cosine) or '
-                             'resnet (multi-step)(default) or '
+                             'resnet (multi-step)'
                              'sc (super convergence)')
     parser.add_argument('--optim-type', default='',
-                        help='Optimizer: darts(default) or resnet or sc`')
+                        help='Optimizer: darts(default) or resnet')
     parser.add_argument('--optim-sched', '-os', default='darts',
-                        help='Optimizer and scheduler: darts or resnet or sc')
+                        help='Optimizer and scheduler: darts or resnet')
 
     args = parser.parse_args()
 
     args.sched_type = args.sched_type or args.optim_sched
     args.optim_type = args.optim_type or args.optim_sched
 
-    acc = train_test(args.experiment_name, args.experiment_description,
-                     args.epochs, args.model_name, args.seed, args.half,
+    train_acc, test_acc = train_test(args.experiment_name, args.experiment_description,
+                     args.epochs, args.model_name, args.train_batch,
+                     args.seed, args.half, args.test_batch,
                      args.cutout, args.sched_type, args.optim_type)
     print_all_timings()
-    logging.info(f'test_accuracy={acc}')
+    logging.info(f'test_accuracy={train_acc}')
+    print_timing('train_epoch')
+
+    results = [
+        ('test_acc', test_acc),
+        ('train_epoch_time', get_timing('train_epoch').mean()),
+        ('test_epoch_time', get_timing('test').mean()),
+        ('epochs', args.epochs),
+        ('train_batch_size', args.train_batch),
+        ('test_batch_size', args.test_batch),
+        ('model_name', args.model_name),
+        ('exp_name', args.experiment_name),
+        ('exp_desc', args.experiment_description),
+        ('seed', args.seed),
+        ('devices', cuda_device_names()),
+        ('half', args.half),
+        ('cutout', args.cutout),
+        ('sched_type', args.sched_type),
+        ('optim_type', args.optim_type),
+        ('train_acc', train_acc),
+    ]
+
+    update_results_file(results)
 
 if __name__ == '__main__':
     main()

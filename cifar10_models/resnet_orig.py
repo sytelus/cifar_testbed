@@ -77,7 +77,7 @@ class ResNet(nn.Module):
         out = self.linear(out)
         return out
 
-def resnet_orig(pretrained=True, device='cpu'):
+def resnet_orig(pretrained=False, device='cpu'):
     net = ResNet(BasicBlock, [3, 3, 3])
     if pretrained:
         script_dir = os.path.dirname(__file__)

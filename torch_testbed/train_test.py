@@ -85,7 +85,7 @@ def train_test(exp_name:str, exp_desc:str, epochs:int, model_name:str,
                loader:str, cutout:int,
                sched_type:str, optim_type:str)->Tuple[float, float]:
 
-    if loader=='auto' or loader=='torch':
+    if loader=='torch':
         import torch_testbed.dataloader_torch as dlm
     elif loader=='dali':
         import torch_testbed.dataloader_dali as dlm

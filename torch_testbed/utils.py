@@ -2,6 +2,8 @@ from typing import List, Optional, Tuple, Any
 import os
 import sys
 import logging
+import csv
+from collections import OrderedDict
 
 import torch
 import torch.backends.cudnn as cudnn
@@ -43,3 +45,24 @@ def setup_cuda(seed):
 
 def cuda_device_names()->str:
     return ', '.join([torch.cuda.get_device_name(i) for i in range(torch.cuda.device_count())])
+
+def append_csv_file(filepath:str, new_row:List[Tuple[str, Any]], delimiter='\t'):
+    fieldnames, rows = [], []
+    if os.path.exists(filepath):
+        with open(filepath, 'r') as f:
+            dr = csv.DictReader(f, delimiter=delimiter)
+            fieldnames = dr.fieldnames
+            rows = [row for row in dr.reader]
+    if fieldnames is None:
+        fieldnames = []
+
+    new_fieldnames = OrderedDict([(fn, None) for fn, v in new_row])
+    for fn in fieldnames:
+        new_fieldnames[fn]=None
+
+    with open(filepath, 'w') as f:
+        dr = csv.DictWriter(f, fieldnames=new_fieldnames.keys(), delimiter=delimiter)
+        dr.writeheader()
+        for row in rows:
+            dr.writerow(dict((k,v) for k,v in zip(fieldnames, row)))
+        dr.writerow(OrderedDict(new_row))

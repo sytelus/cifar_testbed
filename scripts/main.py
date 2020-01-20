@@ -8,28 +8,7 @@ import time
 
 from torch_testbed.train_test import train_test
 from torch_testbed.timing import MeasureTime, print_all_timings, print_timing, get_timing
-from torch_testbed.utils import cuda_device_names
-
-def update_results_file(results:List[Tuple[str, Any]]):
-    fieldnames, rows = [], []
-    if os.path.exists('./results.tsv'):
-        with open('./results.tsv', 'r') as f:
-            dr = csv.DictReader(f, delimiter='\t')
-            fieldnames = dr.fieldnames
-            rows = [row for row in dr.reader]
-    if fieldnames is None:
-        fieldnames = []
-
-    new_fieldnames = OrderedDict([(fn, None) for fn, v in results])
-    for fn in fieldnames:
-        new_fieldnames[fn]=None
-
-    with open('./results.tsv', 'w') as f:
-        dr = csv.DictWriter(f, fieldnames=new_fieldnames.keys(), delimiter='\t')
-        dr.writeheader()
-        for row in rows:
-            dr.writerow(dict((k,v) for k,v in zip(fieldnames, row)))
-        dr.writerow(OrderedDict(results))
+from torch_testbed import utils
 
 
 @MeasureTime
@@ -39,7 +18,7 @@ def main():
     parser.add_argument('--experiment-description', '-d', default='throwaway')
     parser.add_argument('--epochs', '-e', type=int, default=35)
     parser.add_argument('--model-name', '-m', default='resnet18')
-    parser.add_argument('--train-batch', '-b', type=int, default=512)
+    parser.add_argument('--train-batch', '-b', type=int, default=128)
     parser.add_argument('--test-batch', type=int, default=4096)
     parser.add_argument('--seed', '-s', type=int, default=42)
     parser.add_argument('--half', action='store_true', default=False)
@@ -79,7 +58,7 @@ def main():
         ('exp_name', args.experiment_name),
         ('exp_desc', args.experiment_description),
         ('seed', args.seed),
-        ('devices', cuda_device_names()),
+        ('devices', utils.cuda_device_names()),
         ('half', args.half),
         ('cutout', args.cutout),
         ('sched_type', args.sched_type),
@@ -90,7 +69,7 @@ def main():
         ('date', str(time.time())),
     ]
 
-    update_results_file(results)
+    utils.append_csv_file('./results.tsv', results)
 
 if __name__ == '__main__':
     main()

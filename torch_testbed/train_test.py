@@ -1,12 +1,12 @@
 from argparse import ArgumentError
-from typing import List, Tuple, Any
+from typing import List, Mapping, Tuple, Any
 from collections import OrderedDict
 import os
 import logging
 import subprocess
 
 import torch
-
+import yaml
 
 from torch_testbed.timing import MeasureTime
 from torch_testbed import cifar10_models
@@ -60,18 +60,21 @@ def test(net, test_dl, device, half)->float:
     return 100.0*correct/total
 
 @MeasureTime
-def train(epochs, train_dl, net, device, crit, optim,
-          sched, sched_on_epoch, half)->float:
+def train(epochs, train_dl, test_dl, net, device, crit, optim,
+          sched, sched_on_epoch, half)->List[Mapping]:
     if half:
         net.half()
         crit.half()
-    acc = 0.0
+    train_acc, test_acc = 0.0, 0.0
+    metrics = []
     for epoch in range(epochs):
         lr = optim.param_groups[0]['lr']
-        acc = train_epoch(epoch, net, train_dl, device, crit, optim,
+        train_acc = train_epoch(epoch, net, train_dl, device, crit, optim,
                           sched, sched_on_epoch, half)
-        logging.info(f'train_epoch={epoch}, prec1={acc}, lr={lr:.4g}')
-    return acc
+        test_acc = test(net, test_dl, device, half)
+        metrics.append({'test_top1':test_acc, 'train_top1':train_acc, 'lr':lr})
+        logging.info(f'train_epoch={epoch}, test_top1={test_acc}, train_top1={train_acc}, lr={lr:.4g}')
+    return metrics
 
 def param_size(model:torch.nn.Module)->int:
     """count all parameters excluding auxiliary"""
@@ -83,7 +86,7 @@ def param_size(model:torch.nn.Module)->int:
 def train_test(exp_name:str, exp_desc:str, epochs:int, model_name:str,
                train_batch_size:int, loader_workers:int, seed:int, half:bool, test_batch_size:int,
                loader:str, cutout:int,
-               sched_type:str, optim_type:str)->Tuple[float, float]:
+               sched_type:str, optim_type:str)->List[Mapping]:
 
     if loader=='torch':
         import torch_testbed.dataloader_torch as dlm
@@ -168,8 +171,11 @@ def train_test(exp_name:str, exp_desc:str, epochs:int, model_name:str,
     else:
         raise RuntimeError(f'Unsupported LR scheduler type: {sched_type}')
 
-    train_acc = train(epochs, train_dl, net, device, crit, optim,
+    metrics = train(epochs, train_dl, test_dl, net, device, crit, optim,
           sched, sched_on_epoch, half)
-    test_acc = test(net, test_dl, device, half)
-    return train_acc, test_acc
+
+    with open(os.path.join(expdir, 'metrics.yaml'), 'w') as f:
+        yaml.dump(metrics, f)
+
+    return metrics
 

@@ -23,6 +23,6 @@ setuptools.setup(
         "Operating System :: OS Independent",
     ),
     include_package_data=True,
-    install_requires=['runstats']
+    install_requires=['runstats', 'yaml']
 )
 

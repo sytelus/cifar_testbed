@@ -1,10 +1,7 @@
 from typing import List, Tuple, Any
 import argparse
-import logging
-import csv
-from collections import OrderedDict
-import os
 import time
+
 
 from torch_testbed.train_test import train_test
 from torch_testbed.timing import MeasureTime, print_all_timings, print_timing, get_timing
@@ -39,16 +36,16 @@ def main():
     args.sched_type = args.sched_type or args.optim_sched
     args.optim_type = args.optim_type or args.optim_sched
 
-    train_acc, test_acc = train_test(args.experiment_name, args.experiment_description,
+    metrics = train_test(args.experiment_name, args.experiment_description,
                      args.epochs, args.model_name, args.train_batch, args.loader_workers,
                      args.seed, args.half, args.test_batch, args.loader,
                      args.cutout, args.sched_type, args.optim_type)
+
     print_all_timings()
-    logging.info(f'test_accuracy={test_acc}')
     print_timing('train_epoch')
 
     results = [
-        ('test_acc', test_acc),
+        ('test_acc', metrics[-1]['test_top1']),
         ('train_epoch_time', get_timing('train_epoch').mean()),
         ('test_epoch_time', get_timing('test').mean()),
         ('epochs', args.epochs),
@@ -63,7 +60,7 @@ def main():
         ('cutout', args.cutout),
         ('sched_type', args.sched_type),
         ('optim_type', args.optim_type),
-        ('train_acc', train_acc),
+        ('train_acc', metrics[-1]['train_top1']),
         ('loader', args.loader),
         ('loader_workers', args.loader_workers),
         ('date', str(time.time())),

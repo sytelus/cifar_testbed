@@ -33,7 +33,7 @@ def cifar10_transform(aug:bool, cutout=0):
     return transforms.Compose(transf)
 
 @MeasureTime
-def cifar10_dataloaders(datadir:str, train_batch_size=128, test_batch_size=1024,
+def cifar10_dataloaders(datadir:str, train_batch_size=128, test_batch_size=4096,
                     cutout=0, train_num_workers=4, test_num_workers=4)\
                         ->Tuple[DataLoader, DataLoader]:
     if utils.is_debugging():

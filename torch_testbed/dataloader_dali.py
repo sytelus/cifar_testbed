@@ -178,7 +178,7 @@ class CIFAR_INPUT_ITER():
 
     next = __next__
 
-def cifar10_dataloaders(datadir:str, train_batch_size=128, test_batch_size=1024,
+def cifar10_dataloaders(datadir:str, train_batch_size=128, test_batch_size=4096,
                         train_num_workers=4, test_num_workers=4,
                         cutout=0, seed=42, local_rank=0, world_size=1,
                         train=True, test=True, dali_device='gpu'):

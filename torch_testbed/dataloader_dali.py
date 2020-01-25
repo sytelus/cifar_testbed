@@ -182,7 +182,7 @@ def cifar10_dataloaders(datadir:str, train_batch_size=128, test_batch_size=4096,
                         cutout=0, seed=42, local_rank=0, world_size=1,
                         train=True, test=True, dali_device='gpu'):
 
-    if train_batch_size <= -1:
+    if train_num_workers <= -1:
         train_num_workers = torch.cuda.device_count()*4
     if test_num_workers <= -1:
         test_num_workers = torch.cuda.device_count()*4

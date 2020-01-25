@@ -14,14 +14,14 @@ def main():
     parser.add_argument('--experiment-name', '-n', default='throwaway')
     parser.add_argument('--experiment-description', '-d', default='throwaway')
     parser.add_argument('--epochs', '-e', type=int, default=35)
-    parser.add_argument('--model-name', '-m', default='resnet18')
+    parser.add_argument('--model-name', '-m', default='resnet34')
     parser.add_argument('--train-batch', '-b', type=int, default=128)
     parser.add_argument('--test-batch', type=int, default=4096)
     parser.add_argument('--seed', '-s', type=int, default=42)
     parser.add_argument('--half', action='store_true', default=False)
     parser.add_argument('--cutout', type=int, default=0)
     parser.add_argument('--loader', default='torch', help='torch or dali')
-    parser.add_argument('--loader-workers', type=int, default=4, help='number of thread/workers for data loader')
+    parser.add_argument('--loader-workers', type=int, default=-1, help='number of thread/workers for data loader (-1 means auto)')
     parser.add_argument('--sched-type', default='',
                         help='LR scheduler: darts (cosine) or '
                              'resnet (multi-step)'

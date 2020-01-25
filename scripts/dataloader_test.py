@@ -1,6 +1,7 @@
 import logging
 
-from torch_testbed.dataloader_dali import cifar10_dataloaders
+#from torch_testbed.dataloader_dali import cifar10_dataloaders
+from torch_testbed.dataloader_torch import cifar10_dataloaders
 from torch_testbed import utils
 from torch_testbed.timing import MeasureTime, print_all_timings, print_timing, get_timing
 
@@ -9,7 +10,7 @@ utils.setup_logging()
 
 datadir = utils.full_path('~/torchvision_data_dir')
 train_dl, test_dl = cifar10_dataloaders(datadir,
-    train_batch_size=128, test_batch_size=1024,
+    train_batch_size=512, test_batch_size=4096,
     cutout=0)
 
 @MeasureTime
@@ -25,7 +26,7 @@ def iter_dl(dl):
 logging.info(f'batch_cout={len(train_dl)}')
 
 dummy = 0.0
-for _ in range(5):
+for _ in range(10):
     dummy = iter_dl(train_dl)
     print(dummy)
 

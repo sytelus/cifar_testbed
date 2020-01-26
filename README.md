@@ -134,6 +134,7 @@ Please consider contributing!
 * Add [prefetching and other tricks](https://sagivtech.com/2017/09/19/optimizing-pytorch-training-code/) for speed
 * Try [NVidia Dali](https://github.com/tanglang96/DataLoaders_DALI)
 * Use apex instead of .half()
+* Use LARS https://github.com/kakaobrain/torchlars
 
 ## Credits
 

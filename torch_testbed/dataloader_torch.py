@@ -33,12 +33,16 @@ def cifar10_transform(aug:bool, cutout=0):
     return transforms.Compose(transf)
 
 @MeasureTime
-def cifar10_dataloaders(datadir:str, train_batch_size=128, test_batch_size=1024,
-                    cutout=0, train_num_workers=4, test_num_workers=4)\
+def cifar10_dataloaders(datadir:str, train_batch_size=128, test_batch_size=4096,
+                    cutout=0, train_num_workers=-1, test_num_workers=-1)\
                         ->Tuple[DataLoader, DataLoader]:
     if utils.is_debugging():
         train_num_workers = test_num_workers = 0
         logging.info('debugger=true, num_workers=0')
+    if train_num_workers <= -1:
+        train_num_workers = torch.cuda.device_count()*4
+    if test_num_workers <= -1:
+        test_num_workers = torch.cuda.device_count()*4
 
     train_transform = cifar10_transform(aug=True, cutout=cutout)
     trainset = torchvision.datasets.CIFAR10(root=datadir, train=True,

@@ -1,26 +1,43 @@
 test_acc	train_epoch_time	test_epoch_time	epochs	train_batch_size	test_batch_size	model_name	exp_name	exp_desc	seed	devices	half	cutout	sched_type	optim_type	train_acc	loader	loader_workers	date
-79.93	12.979554734396515	2.380892530985875	5	128	1024	resnet18	throwaway	throwaway	42	GeForce RTX 2080 with Max-Q Design	False	0	darts	darts	79.12			
-78.58	21.16349157640361	2.920728957018582	5	128	1024	resnet34	throwaway	throwaway	42	GeForce RTX 2080 with Max-Q Design	False	0	darts	darts	78.182			
-78.44	13.010775357601233	2.436400516977301	5	128	1024	resnet18	throwaway	throwaway	42	GeForce RTX 2080 with Max-Q Design	False	0	darts	darts	79.036			
-77.94	21.556276243791217	2.9270172719843686	5	128	1024	resnet34	throwaway	throwaway	42	GeForce RTX 2080 with Max-Q Design	False	0	darts	darts	77.102			
-71.51	7.695128718391061	2.290804735996062	5	512	1024	resnet18	throwaway	throwaway	42	GeForce RTX 2080 with Max-Q Design	True	0	darts	darts	71.344			
-69.93	12.567392623593332	2.268461149011273	5	512	1024	resnet34	throwaway	throwaway	42	GeForce RTX 2080 with Max-Q Design	True	0	darts	darts	69.934			
-69.77	12.320570028410293	2.267455104010878	5	512	1024	resnet34	throwaway	throwaway	42	GeForce RTX 2080 with Max-Q Design	True	0	darts	darts	69.136			
-68.87	12.757566675398266	2.464882772997953	5	512	1024	resnet34	throwaway	throwaway	42	GeForce RTX 2080 with Max-Q Design	True	0	darts	darts	68.53			
-73.58	7.983103976590792	3.6422641800018027	5	512	4096	resnet18	throwaway	throwaway	42	GeForce RTX 2080 with Max-Q Design	True	0	darts	darts	72.814			
-73.32	8.28573339600116	3.6118133359996136	5	512	4096	resnet18	throwaway	throwaway	42	GeForce RTX 2080 with Max-Q Design	True	0	darts	darts	72.714			
-72.37	7.777384787803749	3.6153081849915907	5	512	4096	resnet18	throwaway	throwaway	42	GeForce RTX 2080 with Max-Q Design	True	0	darts	darts	71.478			
-71.96	8.366935471008764	3.579407456010813	5	512	4096	resnet18	throwaway	pinmemory=false, 8 workers	42	GeForce RTX 2080 with Max-Q Design	True	0	darts	darts	71.402			
-72.59	8.573301507206633	3.6340686379990075	5	512	4096	resnet18	throwaway	pinmemory=false, 12 workers	42	GeForce RTX 2080 with Max-Q Design	True	0	darts	darts	72.034			
-71.45	15.456355910806451	3.6200979969871696	5	512	4096	resnet18	throwaway	pinmemory=true, 0 workers	42	GeForce RTX 2080 with Max-Q Design	True	0	darts	darts	71.28			
-72.82	13.200424996600486	3.672413538006367	5	512	4096	resnet18	throwaway	pinmemory=true, 0 workers	42	GeForce RTX 2080 with Max-Q Design	True	0	darts	darts	71.688			
-72.78	7.725791089201811	3.6350806439877488	5	512	4096	resnet18	throwaway	pinmemory=true, 0 workers	42	GeForce RTX 2080 with Max-Q Design	True	0	darts	darts	72.042			
-57.68	10.105362661997788	3.9585171490034554	1	128	4096	resnet18	throwaway	pinmemory=true, 0 workers	42	GeForce RTX 2080 with Max-Q Design	True	0	darts	darts	44.242			
-71.22	7.775554069207283	2.6578528590034693	5	512	4096	resnet18	throwaway	pinmemory=true, 0 workers	42	GeForce RTX 2080 with Max-Q Design	True	0	darts	darts	71.426			
-71.28	7.75430229359772	2.8052923130162526	5	512	4096	resnet18	throwaway	pinmemory=true, 0 workers	42	GeForce RTX 2080 with Max-Q Design	True	0	darts	darts	72.012			
-72.23	7.74798013039981	3.912617597990902	5	512	4096	resnet18	throwaway	pinmemory=true, 0 workers	42	GeForce RTX 2080 with Max-Q Design	True	0	darts	darts	71.808			
-72.37	7.666847006604075	3.915969365014462	5	512	4096	resnet18	throwaway	pinmemory=true, 0 workers	42	GeForce RTX 2080 with Max-Q Design	True	0	darts	darts	0.0			
-71.8	7.9201339024060875	2.8585683699930087	5	512	4096	resnet18	throwaway	pinmemory=true, 0 workers	42	GeForce RTX 2080 with Max-Q Design	True	0	darts	darts	0.0			
-72.16	7.906610861606896	2.8394661550119054	5	512	4096	resnet18	throwaway	pinmemory=true, 0 workers	42	GeForce RTX 2080 with Max-Q Design	True	0	darts	darts	72.272			
+79.93	12.979554734396515	2.380892530985875	5	128	1024	resnet18	throwaway	throwaway	42	GeForce RTX 2080 with Max-Q Design	False	0	darts	darts	79.12
+78.58	21.16349157640361	2.920728957018582	5	128	1024	resnet34	throwaway	throwaway	42	GeForce RTX 2080 with Max-Q Design	False	0	darts	darts	78.182
+78.44	13.010775357601233	2.436400516977301	5	128	1024	resnet18	throwaway	throwaway	42	GeForce RTX 2080 with Max-Q Design	False	0	darts	darts	79.036
+77.94	21.556276243791217	2.9270172719843686	5	128	1024	resnet34	throwaway	throwaway	42	GeForce RTX 2080 with Max-Q Design	False	0	darts	darts	77.102
+71.51	7.695128718391061	2.290804735996062	5	512	1024	resnet18	throwaway	throwaway	42	GeForce RTX 2080 with Max-Q Design	True	0	darts	darts	71.344
+69.93	12.567392623593332	2.268461149011273	5	512	1024	resnet34	throwaway	throwaway	42	GeForce RTX 2080 with Max-Q Design	True	0	darts	darts	69.934
+69.77	12.320570028410293	2.267455104010878	5	512	1024	resnet34	throwaway	throwaway	42	GeForce RTX 2080 with Max-Q Design	True	0	darts	darts	69.136
+68.87	12.757566675398266	2.464882772997953	5	512	1024	resnet34	throwaway	throwaway	42	GeForce RTX 2080 with Max-Q Design	True	0	darts	darts	68.53
+73.58	7.983103976590792	3.6422641800018027	5	512	4096	resnet18	throwaway	throwaway	42	GeForce RTX 2080 with Max-Q Design	True	0	darts	darts	72.814
+73.32	8.28573339600116	3.6118133359996136	5	512	4096	resnet18	throwaway	throwaway	42	GeForce RTX 2080 with Max-Q Design	True	0	darts	darts	72.714
+72.37	7.777384787803749	3.6153081849915907	5	512	4096	resnet18	throwaway	throwaway	42	GeForce RTX 2080 with Max-Q Design	True	0	darts	darts	71.478
+71.96	8.366935471008764	3.579407456010813	5	512	4096	resnet18	throwaway	pinmemory=false, 8 workers	42	GeForce RTX 2080 with Max-Q Design	True	0	darts	darts	71.402
+72.59	8.573301507206633	3.6340686379990075	5	512	4096	resnet18	throwaway	pinmemory=false, 12 workers	42	GeForce RTX 2080 with Max-Q Design	True	0	darts	darts	72.034
+71.45	15.456355910806451	3.6200979969871696	5	512	4096	resnet18	throwaway	pinmemory=true, 0 workers	42	GeForce RTX 2080 with Max-Q Design	True	0	darts	darts	71.28
+72.82	13.200424996600486	3.672413538006367	5	512	4096	resnet18	throwaway	pinmemory=true, 0 workers	42	GeForce RTX 2080 with Max-Q Design	True	0	darts	darts	71.688
+72.78	7.725791089201811	3.6350806439877488	5	512	4096	resnet18	throwaway	pinmemory=true, 0 workers	42	GeForce RTX 2080 with Max-Q Design	True	0	darts	darts	72.042
+57.68	10.105362661997788	3.9585171490034554	1	128	4096	resnet18	throwaway	pinmemory=true, 0 workers	42	GeForce RTX 2080 with Max-Q Design	True	0	darts	darts	44.242
+71.22	7.775554069207283	2.6578528590034693	5	512	4096	resnet18	throwaway	pinmemory=true, 0 workers	42	GeForce RTX 2080 with Max-Q Design	True	0	darts	darts	71.426
+71.28	7.75430229359772	2.8052923130162526	5	512	4096	resnet18	throwaway	pinmemory=true, 0 workers	42	GeForce RTX 2080 with Max-Q Design	True	0	darts	darts	72.012
+72.23	7.74798013039981	3.912617597990902	5	512	4096	resnet18	throwaway	pinmemory=true, 0 workers	42	GeForce RTX 2080 with Max-Q Design	True	0	darts	darts	71.808
+72.37	7.666847006604075	3.915969365014462	5	512	4096	resnet18	throwaway	pinmemory=true, 0 workers	42	GeForce RTX 2080 with Max-Q Design	True	0	darts	darts	0.0
+71.8	7.9201339024060875	2.8585683699930087	5	512	4096	resnet18	throwaway	pinmemory=true, 0 workers	42	GeForce RTX 2080 with Max-Q Design	True	0	darts	darts	0.0
+72.16	7.906610861606896	2.8394661550119054	5	512	4096	resnet18	throwaway	pinmemory=true, 0 workers	42	GeForce RTX 2080 with Max-Q Design	True	0	darts	darts	72.272
 71.93	11.668343918403844	4.517665864987066	5	512	4096	resnet18	throwaway	pinmemory=true, 0 workers	42	GeForce RTX 2080 with Max-Q Design	False	0	darts	darts	72.042	auto	4	1579476020.7502885
 79.4	13.214559849991929	3.9176493650011253	5	128	4096	resnet18	throwaway	throwaway	42	GeForce RTX 2080 with Max-Q Design	False	0	darts	darts	78.988	torch	4	1579514623.1927507
+72.72	4.946617492399673	4.536822980000579	5	512	4096	resnet18	throwaway	throwaway	42	Tesla V100-PCIE-16GB	False	0	darts	darts	72.05	torch	4	1579514022.8045845
+72.41	4.933355397800915	4.573768625999946	5	512	4096	resnet18	throwaway	throwaway	42	Tesla V100-PCIE-16GB	False	0	darts	darts	72.098	torch	4	1579514382.0891538
+78.92	6.684317834000103	4.824161083997751	5	128	4096	resnet18	throwaway	throwaway	42	Tesla V100-PCIE-16GB	False	0	darts	darts	78.422	torch	4	1579514642.527337
+86.47	4.618499050314299	4.444449391000035	35	512	4096	resnet18	throwaway	pinmemory=true, 0 workers	42	Tesla V100-PCIE-16GB	False	0	darts	darts	94.18	auto	4	1579476476.6341636
+85.9	4.839362297428567	3.4987127059998784	35	512	4096	resnet18	throwaway	pinmemory=true, 0 workers	42	Tesla V100-PCIE-16GB	False	0	darts	darts	94.992	dali	4	1579476892.4218068
+85.71	3.260229758685701	3.5062845880001987	35	512	4096	resnet18	throwaway	pinmemory=true, 0 workers	42	Tesla V100-PCIE-16GB	True	0	resnet	resnet	93.448	dali	4	1579477060.552401
+85.2	3.7680853720570933	4.4866194159999395	35	512	4096	resnet18	throwaway	pinmemory=true, 0 workers	42	Tesla V100-PCIE-16GB	True	0	resnet	resnet	92.696	torch	4	1579477260.0533164
+86.32	6.788796962914289	4.558521643999995	35	128	4096	resnet18	throwaway	pinmemory=true, 0 workers	42	Tesla V100-PCIE-16GB	False	0	resnet	resnet	91.414	torch	4	1579479341.0355442
+85.55	7.02031558228565	3.74446839400116	35	128	4096	resnet18	throwaway	pinmemory=true, 0 workers	42	Tesla V100-PCIE-16GB	False	0	resnet	resnet	91.484	dali	4	1579497800.193616
+92.12	7.031583436010022	3.772665833999781	200	128	4096	resnet18	throwaway	resnet repro 200 epoch	42	Tesla V100-PCIE-16GB	False	0	resnet	resnet	99.946	dali	4	1579499484.926965
+92.19	6.809204602500011	4.62297132599997	200	128	4096	resnet18	throwaway	resnet repro 200 epoch	42	Tesla V100-PCIE-16GB	False	0	resnet	resnet	99.938	torch	4	1579507241.1406748
+78.35	12.350701678699625	2.1796346302999154	10	512	4096	resnet34	throwaway	throwaway	42	TITAN Xp, TITAN Xp	False	0	darts	darts	79.908	torch	4	1579922712.1062942
+72.83	3.4558863654000107	3.5042908259999876	5	512	4096	resnet18	throwaway	pinmemory=true, 0 workers	42	Tesla V100-PCIE-16GB	True	0	darts	darts	71.764
+72.07	4.006220115000019	4.487350309000021	5	512	4096	resnet18	throwaway	pinmemory=true, 0 workers	42	Tesla V100-PCIE-16GB	True	0	darts	darts	71.35
+91.35	3.1826789578400025	3.4914522929998384	600	512	4096	resnet18	throwaway	pinmemory=true, 0 workers	42	Tesla V100-PCIE-16GB	True	0	darts	darts	100.0
+71.93	11.668343918403844	4.517665864987066	5	512	4096	resnet18	throwaway	pinmemory=true, 0 workers	42	GeForce RTX 2080 with Max-Q Design	False	0	darts	darts	72.042	auto	4	1579476020.7502885
+78.35	12.350701678699625	2.1796346302999154	10	512	4096	resnet34	throwaway	throwaway	42	TITAN Xp, TITAN Xp	False	0	darts	darts	79.908	torch	4	1579922712.1062942

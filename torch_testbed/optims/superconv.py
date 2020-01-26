@@ -13,7 +13,7 @@ def optim_sched(epochs, net, *kargs, **kvargs):
         logging.info(f'lr={lr}, momentum={momentum}, weight_decay={weight_decay}')
 
         sched = torch.optim.lr_scheduler.OneCycleLR(
-            optim, max_lr=lr/batch_size, epochs=epochs, steps_per_epoch=steps_per_epoch,
+            optim, max_lr=lr, epochs=epochs, steps_per_epoch=steps_per_epoch,
             pct_start=warmup_steps/total_steps, anneal_strategy='linear',
             cycle_momentum=False, div_factor=100000.0,
             final_div_factor=100000.0

@@ -6,7 +6,7 @@ import numpy as np
 
 from torch_testbed import utils, cifar10_models
 from torch_testbed.timing import MeasureTime, print_all_timings, print_timing, get_timing, clear_timings
-from torch_testbed.dataloader_dali import cifar10_dataloaders
+from torch_testbed.dataloader_torch import cifar10_dataloaders
 
 
 utils.setup_logging()
@@ -53,8 +53,8 @@ def warm_up(epochs):
             for _ in range(round(50000/batch_size))]
         i,d = iter_dl(train_dl)
     cudnn.benchmark = False
-warm_up(5)
-#print_all_timings()
+# warm_up(5)
+# print_all_timings()
 clear_timings()
 
 for _ in range(5):

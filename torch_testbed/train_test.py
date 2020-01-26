@@ -83,7 +83,8 @@ def param_size(model:torch.nn.Module)->int:
 
 
 @MeasureTime
-def train_test(exp_name:str, exp_desc:str, epochs:int, model_name:str,
+def train_test(datadir:str, expdir:str,
+               exp_name:str, exp_desc:str, epochs:int, model_name:str,
                train_batch_size:int, loader_workers:int, seed:int, half:bool, test_batch_size:int,
                loader:str, cutout:int,
                sched_type:str, optim_type:str)->List[Mapping]:
@@ -96,10 +97,9 @@ def train_test(exp_name:str, exp_desc:str, epochs:int, model_name:str,
         raise ArgumentError(f'data loader type "{loader}" is not recognized')
 
     # dirs
-    datadir = utils.full_path('~/torchvision_data_dir')
-    expdir = utils.full_path(os.path.join('~/logdir/cifar_testbed/', exp_name))
+    datadir = utils.full_path(datadir)
     os.makedirs(datadir, exist_ok=True)
-    os.makedirs(expdir, exist_ok=True)
+
     utils.setup_logging(filepath=os.path.join(expdir, 'logs.log'))
 
     # log config for reference
@@ -178,4 +178,6 @@ def train_test(exp_name:str, exp_desc:str, epochs:int, model_name:str,
         yaml.dump(metrics, f)
 
     return metrics
+
+
 

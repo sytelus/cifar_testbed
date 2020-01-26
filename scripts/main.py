@@ -1,6 +1,7 @@
 from typing import List, Tuple, Any
 import argparse
 import time
+import os
 
 
 from torch_testbed.train_test import train_test
@@ -21,6 +22,11 @@ def main():
     parser.add_argument('--half', action='store_true', default=False)
     parser.add_argument('--cutout', type=int, default=0)
     parser.add_argument('--loader', default='torch', help='torch or dali')
+    parser.add_argument('--datadir', default='',
+                        help='where to find dataset files, default is ~/torchvision_data_dir')
+    parser.add_argument('--outdir', default='',
+                        help='where to put results, default is ~/logdir')
+
     parser.add_argument('--loader-workers', type=int, default=-1, help='number of thread/workers for data loader (-1 means auto)')
     parser.add_argument('--sched-type', default='',
                         help='LR scheduler: darts (cosine) or '
@@ -33,10 +39,20 @@ def main():
 
     args = parser.parse_args()
 
+    if not args.datadir:
+        args.datadir = os.environ.get('PT_DATA_DIR', '') or '~/torchvision_data_dir'
+    if not args.outdir:
+        args.outdir = os.environ.get('PT_OUTPUT_DIR', '')
+        if not args.outdir:
+            args.outdir = os.path.join('~/logdir', 'cifar_testbed', args.experiment_name)
+
+    expdir = utils.full_path(args.outdir)
+    os.makedirs(expdir, exist_ok=True)
+
     args.sched_type = args.sched_type or args.optim_sched
     args.optim_type = args.optim_type or args.optim_sched
 
-    metrics = train_test(args.experiment_name, args.experiment_description,
+    metrics = train_test(args.datadir, expdir, args.experiment_name, args.experiment_description,
                      args.epochs, args.model_name, args.train_batch, args.loader_workers,
                      args.seed, args.half, args.test_batch, args.loader,
                      args.cutout, args.sched_type, args.optim_type)
@@ -66,7 +82,7 @@ def main():
         ('date', str(time.time())),
     ]
 
-    utils.append_csv_file('./results.tsv', results)
+    utils.append_csv_file(os.path.join(expdir, 'results.tsv'), results)
 
 if __name__ == '__main__':
     main()

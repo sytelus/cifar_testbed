@@ -7,7 +7,7 @@ def optim_sched(epochs, net, *kargs, **kvargs):
         total_steps = steps_per_epoch * epochs
         warmup_steps = steps_per_epoch * 15 # first 15 epochs
 
-        lr, momentum, weight_decay = 0.1, 0.9, 5.0e-3
+        lr, momentum, weight_decay = 0.15, 0.9, 3.0e-3
         optim = torch.optim.SGD(net.parameters(),
                                 lr, momentum=momentum, weight_decay=weight_decay)
         logging.info(f'lr={lr}, momentum={momentum}, weight_decay={weight_decay}')
@@ -15,7 +15,7 @@ def optim_sched(epochs, net, *kargs, **kvargs):
         sched = torch.optim.lr_scheduler.OneCycleLR(
             optim, max_lr=lr, epochs=epochs, steps_per_epoch=steps_per_epoch,
             pct_start=warmup_steps/total_steps, anneal_strategy='cos',
-            cycle_momentum=True, div_factor=10000.0,
+            cycle_momentum=True, div_factor=100000.0,
             final_div_factor=100000.0
         )
         sched_on_epoch = False

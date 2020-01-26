@@ -14,9 +14,9 @@ def optim_sched(epochs, net, *kargs, **kvargs):
 
         sched = torch.optim.lr_scheduler.OneCycleLR(
             optim, max_lr=lr, epochs=epochs, steps_per_epoch=steps_per_epoch,
-            pct_start=warmup_steps/total_steps, anneal_strategy='linear',
-            cycle_momentum=True, div_factor=100000.0,
-            final_div_factor=100000.0
+            pct_start=warmup_steps/total_steps, anneal_strategy='cos',
+            cycle_momentum=True, div_factor=1000000.0,
+            final_div_factor=1000000.0
         )
         sched_on_epoch = False
 

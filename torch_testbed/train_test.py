@@ -249,7 +249,7 @@ def ideal_sched(datadir:str, expdir:str,
                 yaml.dump(run_results, f)
         net = best_net
 
-    return run_results[-1][1][0]
+    return run_results[-1][1][0], train_batch_size
 
 
 

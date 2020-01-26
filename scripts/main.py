@@ -16,7 +16,7 @@ def main():
     parser.add_argument('--experiment-description', '-d', default='throwaway')
     parser.add_argument('--epochs', '-e', type=int, default=35)
     parser.add_argument('--model-name', '-m', default='resnet34')
-    parser.add_argument('--train-batch', '-b', type=int, default=128)
+    parser.add_argument('--train-batch', '-b', type=int, default=-1)
     parser.add_argument('--test-batch', type=int, default=4096)
     parser.add_argument('--seed', '-s', type=int, default=42)
     parser.add_argument('--half', action='store_true', default=False)
@@ -43,7 +43,7 @@ def main():
     expdir = utils.full_path(args.outdir)
     os.makedirs(expdir, exist_ok=True)
 
-    metrics = train_test(args.datadir, expdir, args.experiment_name, args.experiment_description,
+    metrics, train_batch_size = train_test(args.datadir, expdir, args.experiment_name, args.experiment_description,
                      args.epochs, args.model_name, args.train_batch, args.loader_workers,
                      args.seed, args.half, args.test_batch, args.loader,
                      args.cutout, args.optim_sched)
@@ -56,7 +56,7 @@ def main():
         ('train_epoch_time', get_timing('train_epoch').mean()),
         ('test_epoch_time', get_timing('test').mean()),
         ('epochs', args.epochs),
-        ('train_batch_size', args.train_batch),
+        ('train_batch_size', train_batch_size),
         ('test_batch_size', args.test_batch),
         ('model_name', args.model_name),
         ('exp_name', args.experiment_name),

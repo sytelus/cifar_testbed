@@ -87,7 +87,7 @@ def param_size(model:torch.nn.Module)->int:
 def train_test(datadir:str, expdir:str,
                exp_name:str, exp_desc:str, epochs:int, model_name:str,
                train_batch_size:int, loader_workers:int, seed:int, half:bool, test_batch_size:int,
-               loader:str, cutout:int, sched_optim:str)->List[Mapping]:
+               loader:str, cutout:int, sched_optim:str)->Tuple[List[Mapping], int]:
 
     if loader=='torch':
         import torch_testbed.dataloader_torch as dlm
@@ -126,6 +126,13 @@ def train_test(datadir:str, expdir:str,
 
     crit = torch.nn.CrossEntropyLoss().to(device)
 
+    logging.info(f'optim_type={sched_optim}')
+    optim, sched, sched_on_epoch, batch_size = getattr(optims, sched_optim).optim_sched(
+        epochs, net)
+    if train_batch_size <= 0:
+        train_batch_size=batch_size
+    logging.info(f'train_batch_size={train_batch_size}')
+
     # load data just before train start so any errors so far is not delayed
     train_dl, test_dl = dlm.cifar10_dataloaders(datadir,
         train_batch_size=train_batch_size, test_batch_size=test_batch_size,
@@ -133,16 +140,13 @@ def train_test(datadir:str, expdir:str,
         cutout=cutout)
     #train_dl = PrefetchDataLoader(train_dl, device)
 
-    optim, sched, sched_on_epoch = getattr(optims, sched_optim).optim_sched(
-        epochs, net, train_dl)
-
     metrics = train(epochs, train_dl, test_dl, net, device, crit, optim,
           sched, sched_on_epoch, half)
 
     with open(os.path.join(expdir, 'metrics.yaml'), 'w') as f:
         yaml.dump(metrics, f)
 
-    return metrics
+    return metrics, train_batch_size
 
 
 

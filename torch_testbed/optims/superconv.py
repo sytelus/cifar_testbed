@@ -1,17 +1,23 @@
 import logging
 import torch
 
-def optim_sched(epochs, net, train_dl, *kargs, **kvargs):
-        lr, betas, weight_decay = 3.0e-3, (0.95,0.85), 1.2e-6
-        optim = torch.optim.AdamW(net.parameters(), lr=lr, betas=betas, eps=1.0e-08,
-                          weight_decay=weight_decay, amsgrad=False)
-        logging.info(f'optim_type=superconv, '
-                     f'lr={lr}, betas={betas}, weight_decay={weight_decay}')
+def optim_sched(epochs, net, *kargs, **kvargs):
+        batch_size, train_size = 512, 50000
+        steps_per_epoch = train_size // batch_size
+        total_steps = steps_per_epoch * epochs
+        warmup_steps = steps_per_epoch * 5 # first 5 epochs
+
+        lr, momentum, weight_decay = 0.4, 0.9, 0.000125 * 512
+        optim = torch.optim.SGD(net.parameters(),
+                                lr, momentum=momentum, weight_decay=weight_decay)
+        logging.info(f'lr={lr}, momentum={momentum}, weight_decay={weight_decay}')
 
         sched = torch.optim.lr_scheduler.OneCycleLR(
-            optim, 0.0001, epochs=epochs, steps_per_epoch=len(train_dl),
-            pct_start=5.0/epochs, anneal_strategy='linear'
+            optim, max_lr=lr/batch_size, epochs=epochs, steps_per_epoch=steps_per_epoch,
+            pct_start=warmup_steps/total_steps, anneal_strategy='linear',
+            cycle_momentum=False, div_factor=100000.0,
+            final_div_factor=100000.0
         )
         sched_on_epoch = False
 
-        return optim, sched, sched_on_epoch
+        return optim, sched, sched_on_epoch, 512

@@ -167,7 +167,7 @@ def generate_sched_trials():
     wd = np.array([10**p for p in range(-6, -2)])
     wd = np.concatenate((wd, wd*5))
 
-    return list(itertools.product(lrs, moms, wd))
+    return list(itertools.product(lrs.tolist(), moms.tolist(), wd.tolist()))
 
 def sched_trial_epoch(net_orig, sched_trial, train_dl, test_dl, epochs, device,
                       crit, half)->Tuple[torch.nn.Module, List[Mapping]]:

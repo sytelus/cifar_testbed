@@ -54,11 +54,11 @@ class DavidNet(nn.Module):
         assert not pretrained
         self._op =  nn.Sequential(
             ConvBn(3, 64),
-            ConvRes(64, 64*2),
+            ConvRes(64, 64),
             ConvBnPool(64*2, 64*4),
-            ConvRes(64*4, 64*8),
-            nn.AdaptiveMaxPool2d(512),
-            nn.Linear(in_features=512, out_features=10, bias=True)
+            ConvRes(64*4, 64*4),
+            nn.AdaptiveMaxPool2d(128),
+            nn.Linear(in_features=128, out_features=10, bias=True)
         )
 
     def forward(self, x):

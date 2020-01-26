@@ -7,7 +7,7 @@ def optim_sched(epochs, net, *kargs, **kvargs):
         total_steps = steps_per_epoch * epochs
         warmup_steps = steps_per_epoch * 15 # first 15 epochs
 
-        lr, momentum, weight_decay = 0.5, 0.9, 5e-4
+        lr, momentum, weight_decay = 0.1, 0.9, 3e-4
         optim = torch.optim.SGD(net.parameters(),
                                 lr, momentum=momentum, weight_decay=weight_decay)
         logging.info(f'lr={lr}, momentum={momentum}, weight_decay={weight_decay}')

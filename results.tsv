@@ -23,6 +23,7 @@ test_acc	train_epoch_time	test_epoch_time	epochs	train_batch_size	test_batch_siz
 71.8	7.9201339024060875	2.8585683699930087	5	512	4096	resnet18	throwaway	pinmemory=true, 0 workers	42	GeForce RTX 2080 with Max-Q Design	True	0	darts	darts	0.0
 72.16	7.906610861606896	2.8394661550119054	5	512	4096	resnet18	throwaway	pinmemory=true, 0 workers	42	GeForce RTX 2080 with Max-Q Design	True	0	darts	darts	72.272
 71.93	11.668343918403844	4.517665864987066	5	512	4096	resnet18	throwaway	pinmemory=true, 0 workers	42	GeForce RTX 2080 with Max-Q Design	False	0	darts	darts	72.042	auto	4	1579476020.7502885
+79.4	13.214559849991929	3.9176493650011253	5	128	4096	resnet18	throwaway	throwaway	42	GeForce RTX 2080 with Max-Q Design	False	0	darts	darts	78.988	torch	4	1579514623.1927507
 72.72	4.946617492399673	4.536822980000579	5	512	4096	resnet18	throwaway	throwaway	42	Tesla V100-PCIE-16GB	False	0	darts	darts	72.05	torch	4	1579514022.8045845
 72.41	4.933355397800915	4.573768625999946	5	512	4096	resnet18	throwaway	throwaway	42	Tesla V100-PCIE-16GB	False	0	darts	darts	72.098	torch	4	1579514382.0891538
 78.92	6.684317834000103	4.824161083997751	5	128	4096	resnet18	throwaway	throwaway	42	Tesla V100-PCIE-16GB	False	0	darts	darts	78.422	torch	4	1579514642.527337

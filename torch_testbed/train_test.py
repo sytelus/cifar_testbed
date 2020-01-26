@@ -77,7 +77,7 @@ def train(epochs, train_dl, test_dl, net, device, crit, optim,
                           sched, sched_on_epoch, half)
         test_acc = test(net, test_dl, device, half)
         metrics.append({'test_top1':test_acc, 'train_top1':train_acc, 'lr':lr})
-        logging.info(f'train_epoch={epoch}, test_top1={test_acc}, train_top1={train_acc}, lr={lr:.4g}')
+        #logging.info(f'train_epoch={epoch}, test_top1={test_acc}, train_top1={train_acc}, lr={lr:.4g}')
     return metrics
 
 def param_size(model:torch.nn.Module)->int:
@@ -248,6 +248,8 @@ def ideal_sched(datadir:str, expdir:str,
             with open(os.path.join(expdir, 'sched_trials.yaml'), 'w') as f:
                 yaml.dump(run_results, f)
         net = best_net
+        best_trial = trial_results[0]
+        logging.info(f'train_epoch={epoch}, test_top1={best_trial[0]}, sched={best_trial[1]}')
 
     return run_results[-1][1][0][2], train_batch_size
 

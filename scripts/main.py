@@ -4,7 +4,7 @@ import time
 import os
 
 
-from torch_testbed.train_test import train_test
+from torch_testbed import train_test
 from torch_testbed.timing import MeasureTime, print_all_timings, print_timing, get_timing
 from torch_testbed import utils
 
@@ -14,7 +14,7 @@ def main():
     parser = argparse.ArgumentParser(description='Pytorch cifasr testbed')
     parser.add_argument('--experiment-name', '-n', default='throwaway')
     parser.add_argument('--experiment-description', '-d', default='throwaway')
-    parser.add_argument('--epochs', '-e', type=int, default=35)
+    parser.add_argument('--epochs', '-e', type=int, default=2)
     parser.add_argument('--model-name', '-m', default='davidnet')
     parser.add_argument('--train-batch', '-b', type=int, default=-1)
     parser.add_argument('--test-batch', type=int, default=4096)
@@ -22,6 +22,7 @@ def main():
     parser.add_argument('--half', action='store_true', default=True)
     parser.add_argument('--cutout', type=int, default=0)
     parser.add_argument('--loader', default='torch', help='torch or dali')
+    parser.add_argument('--task', default='ideal_sched', help='torch or dali')
     parser.add_argument('--datadir', default='',
                         help='where to find dataset files, default is ~/torchvision_data_dir')
     parser.add_argument('--outdir', default='',
@@ -43,7 +44,8 @@ def main():
     expdir = utils.full_path(args.outdir)
     os.makedirs(expdir, exist_ok=True)
 
-    metrics, train_batch_size = train_test(args.datadir, expdir, args.experiment_name, args.experiment_description,
+    task = getattr(train_test, args.task)
+    metrics, train_batch_size = task(args.datadir, expdir, args.experiment_name, args.experiment_description,
                      args.epochs, args.model_name, args.train_batch, args.loader_workers,
                      args.seed, args.half, args.test_batch, args.loader,
                      args.cutout, args.optim_sched)

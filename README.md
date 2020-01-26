@@ -65,25 +65,45 @@ Check [results folder](https://github.com/sytelus/cifar_testbed/tree/master/resu
 * Best I have got so far is 89.8% accuracy in 35 epochs, 185 seconds, 5.2s/epoch using resnet18 with darts optimizer setting and half precision.
 
 
-### On laptop:
+### On laptop (Gigabyte Aero 15 w/ GeForce RTX 2080 with Max-Q Design with tubo disabled):
 
-* Entire cifar10 dataset can be iterated in 3.7sec +/- 1.4s (max 6.2sec) on laptop without cuda transfer, using PyTorch native dataloaders. Amazingly this time remains same with cuda. See dataloader_test.py
-* On laptop: Resnet34 model can do forward pass of a 128 batch of in memory randomly generated tensor in 0.0129sec. This is 4.878sec/epoch (cifar has 391 batches). This can be brought down to 4.196sec/epoch if we pregenerate all tensors and move to cuda. All of cifar10 tensors combined takes just 615MB in cuda! This baloons to 21.4sec/epoch when forward+backward pass is added.
-* setup_cuda, 128 batch size: 4.3s->3.3s without backward pass, 21.91s->12.38s with backward pass
-* resnet34 model_test -> 21.63s/epoch with setup_cuda and backward pass
-* 512 batch size gets 12.13s/epoch forward+backward, resnet18
-* 512 batch size + fp16 gets 2.76s/epoch forward+backward, resnet18
-* 1024 batch size + fp16 gets 2.349s/epoch forward+backward, resnet18
-* 2048 batch size + fp16 gets 2.087s/epoch forward+backward, resnet18
-* 2048*2 batch size + fp16 gets 1.948s/epoch forward+backward, resnet18
-* 2048*4 batch size + fp16 gets 1.748s/epoch forward+backward, resnet18
-* 2048*8 batch size + fp16 gets 1.687s/epoch forward+backward, resnet18
+* Dataset lower bound: Entire cifar10 dataset can be iterated in 3.7sec +/- 1.4s (max 6.2sec) on laptop without cuda transfer, using PyTorch native dataloaders. Amazingly this time remains same with cuda. See dataloader_test.py.
+* Model lower bound: Resnet34 model can do forward pass of a 128 batch randomly generated tensors in 0.0129sec. This is 4.878sec/epoch (cifar has 391 batches). This can be brought down to 4.196sec/epoch if we pre-generate all tensors and move to cuda. All of cifar10 tensors combined takes just 615MB in cuda! This baloons to 21.4sec/epoch when forward+backward pass is added when cudnn.benchmark=False.
+* Effect of cudnn.benchmark=True on model lower bound: 128 batch size: 4.3s->3.3s without backward pass, 21.91s->12.38s with backward pass
 
-* main script dataloader + backward pass, 128 batch: resnet18->12.98, resnet34->21.16
-* main script dataloader + backward pass, 512 batch + fp16: resnet18->7.695, resnet34->12.57
-* main script dataloader + backward pass, 512 batch + fp16 + 0 workers: resnet18->15.46
-* main script dataloader + backward pass, 512 batch + fp16 + 1 workers: resnet18->13.2
-* main script dataloader + backward pass, 512 batch + fp16 + 2 workers: resnet18->7.726
+| Model    	| Half  	| cudnn.benchmark 	| Batch 	| Mode         	| num_workers 	| sec/epoch 	|
+|----------	|-------	|-----------------	|-------	|--------------	|-------------	|-----------	|
+| resnet18 	| FALSE 	| FALSE           	| 128   	| in-memory    	|             	| 14.1      	|
+| resnet18 	| FALSE 	| TRUE            	| 128   	| in-memory    	|             	| 7.03      	|
+| resnet18 	| FALSE 	| TRUE            	| 128   	| torch-loader 	|             	| 12.98     	|
+| resnet18 	| TRUE  	| TRUE            	| 128   	| in-memory    	|             	| 5.741     	|
+| resnet18 	| FALSE 	| TRUE            	| 256   	| in-memory    	|             	| 5.32      	|
+| resnet18 	| TRUE  	| TRUE            	| 256   	| in-memory    	|             	| 3.78      	|
+| resnet18 	| FALSE 	| TRUE            	| 512   	| in-memory    	|             	| 12.13     	|
+| resnet18 	| FALSE	    | TRUE            	| 512   	| torch-loader 	| 4          	| 11.46       	|
+| resnet18 	| TRUE 	    | TRUE            	| 512   	| torch-loader 	| 2-4          	| 7.8       	|
+| resnet18 	| TRUE 	    | TRUE            	| 512   	| torch-loader 	| 1           	| 13.2      	|
+| resnet18 	| TRUE  	| TRUE            	| 512   	| torch-loader 	| 0           	| 15.46     	|
+| resnet18 	| TRUE  	| TRUE            	| 512   	| in-memory    	|             	| 2.76      	|
+| resnet18 	| TRUE  	| TRUE            	| 1024  	| in-memory    	|             	| 2.35      	|
+| resnet18 	| FALSE 	| TRUE            	| 2048  	| in-memory    	|             	| 4.68      	|
+| resnet18 	| TRUE  	| TRUE            	| 2048  	| in-memory    	|             	| 2.087     	|
+| resnet18 	| TRUE  	| TRUE            	| 4096  	| in-memory    	|             	| 1.95      	|
+| resnet18 	| TRUE  	| TRUE            	| 8192  	| in-memory    	|             	| 1.75      	|
+| resnet18 	| TRUE  	| TRUE            	| 16384 	| in-memory    	|             	| 1.69      	|
+| resnet34 	| FALSE 	| FALSE           	| 128   	| in-memory    	|             	| 20.71     	|
+| resnet34 	| FALSE 	| TRUE            	| 128   	| in-memory    	|             	| 12.38     	|
+| resnet34 	| FALSE 	| TRUE            	| 128   	| torch-loader 	|             	| 21.16     	|
+| resnet34 	| TRUE  	| TRUE            	| 128   	| torch-loader 	|             	| 16.4       	|
+| resnet34 	| FALSE 	| TRUE            	| 256   	| in-memory    	|             	| 9.41      	|
+| resnet34 	| TRUE  	| TRUE            	| 256   	| in-memory    	|             	| 7.39      	|
+| resnet34 	| FALSE 	| TRUE            	| 512   	| in-memory    	|             	| 7.44      	|
+| resnet34 	| FALSE 	| TRUE            	| 512   	| torch-loader 	|             	| 18.34      	|
+| resnet34 	| TRUE  	| TRUE            	| 512   	| torch-loader 	|             	| 12.66      	|
+| resnet34 	| TRUE  	| TRUE            	| 512   	| in-memory    	|             	| 5.68      	|
+| resnet34 	| FALSE 	| TRUE            	| 2048  	| in-memory    	|             	| 7.2       	|
+| resnet34 	| TRUE  	| TRUE            	| 2048  	| in-memory    	|             	| 4.517     	|
+|          	|       	|                 	|       	|              	|             	|           	|
 
 
 

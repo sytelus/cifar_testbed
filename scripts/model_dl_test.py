@@ -13,7 +13,7 @@ utils.setup_logging()
 utils.setup_cuda(42)
 
 batch_size = 512
-half = True
+half = False
 
 datadir = utils.full_path('~/torchvision_data_dir')
 train_dl, test_dl = cifar10_dataloaders(datadir,
@@ -45,17 +45,16 @@ def iter_dl(dl):
     return i, d
 
 def warm_up(epochs):
+    cudnn.benchmark = True
     for _ in range(epochs):
         train_dl = [(torch.rand(batch_size, 3, 12, 12).cuda() \
                 if not half else torch.rand(batch_size, 3, 12, 12).cuda().half(), \
             torch.LongTensor(batch_size).random_(0, 10).cuda()) \
             for _ in range(round(50000/batch_size))]
         i,d = iter_dl(train_dl)
-
-# warm_up(5)
-# cudnn.benchmark = False
-
-print_all_timings()
+    cudnn.benchmark = False
+warm_up(5)
+#print_all_timings()
 clear_timings()
 
 for _ in range(5):

@@ -115,6 +115,7 @@ Check [results folder](https://github.com/sytelus/cifar_testbed/tree/master/resu
 * Doubling model size increases epoch time by 60-70% across batch sizes regardless of fp16 or fp32
 * fp16 reduces epoch time by 23-27%
 * Dali and torchdataloaders show similar performance overall even though dali loaders have much higher throughput
+* In memory random tensors vs cifar tensors have more than 2X difference!
 
 ## Work-In-Progress
 

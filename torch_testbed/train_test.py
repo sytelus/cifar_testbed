@@ -11,6 +11,7 @@ import yaml
 from torch_testbed.timing import MeasureTime
 from torch_testbed import cifar10_models
 from torch_testbed import utils
+from . import optims
 
 # Training
 @MeasureTime
@@ -86,8 +87,7 @@ def param_size(model:torch.nn.Module)->int:
 def train_test(datadir:str, expdir:str,
                exp_name:str, exp_desc:str, epochs:int, model_name:str,
                train_batch_size:int, loader_workers:int, seed:int, half:bool, test_batch_size:int,
-               loader:str, cutout:int,
-               sched_type:str, optim_type:str)->List[Mapping]:
+               loader:str, cutout:int, sched_optim:str)->List[Mapping]:
 
     if loader=='torch':
         import torch_testbed.dataloader_torch as dlm
@@ -105,7 +105,7 @@ def train_test(datadir:str, expdir:str,
     # log config for reference
     logging.info(f'exp_name="{exp_name}", exp_desc="{exp_desc}"')
     logging.info(f'model_name="{model_name}", seed={seed}, epochs={epochs}')
-    logging.info(f'half={half}, cutout={cutout}, sched_type={sched_type}')
+    logging.info(f'half={half}, cutout={cutout}, train_batch_size={train_batch_size}')
     logging.info(f'datadir="{datadir}"')
     logging.info(f'expdir="{expdir}"')
 
@@ -126,27 +126,6 @@ def train_test(datadir:str, expdir:str,
 
     crit = torch.nn.CrossEntropyLoss().to(device)
 
-    if optim_type=='darts':
-        lr, momentum, weight_decay = 0.025, 0.9, 3.0e-4
-        optim = torch.optim.SGD(net.parameters(),
-                                lr, momentum=momentum, weight_decay=weight_decay)
-        logging.info(f'optim_type={optim_type}, '
-                     f'lr={lr}, momentum={momentum}, weight_decay={weight_decay}')
-    elif optim_type=='resnet':
-        lr, momentum, weight_decay = 0.1, 0.9, 1.0e-4
-        optim = torch.optim.SGD(net.parameters(),
-                                lr, momentum=momentum, weight_decay=weight_decay)
-        logging.info(f'optim_type={optim_type}, '
-                     f'lr={lr}, momentum={momentum}, weight_decay={weight_decay}')
-    elif optim_type=='sc': # super convergence
-        lr, betas, weight_decay = 3.0e-3, (0.95,0.85), 1.2e-6
-        optim = torch.optim.AdamW(net.parameters(), lr=lr, betas=betas, eps=1.0e-08,
-                          weight_decay=weight_decay, amsgrad=False)
-        logging.info(f'optim_type={optim_type}, '
-                     f'lr={lr}, betas={betas}, weight_decay={weight_decay}')
-    else:
-        raise RuntimeError(f'Unsupported LR scheduler type: {sched_type}')
-
     # load data just before train start so any errors so far is not delayed
     train_dl, test_dl = dlm.cifar10_dataloaders(datadir,
         train_batch_size=train_batch_size, test_batch_size=test_batch_size,
@@ -154,22 +133,8 @@ def train_test(datadir:str, expdir:str,
         cutout=cutout)
     #train_dl = PrefetchDataLoader(train_dl, device)
 
-    if sched_type=='darts':
-        sched = torch.optim.lr_scheduler.CosineAnnealingLR(optim,
-            T_max=epochs, eta_min=0.001) # darts paper
-        sched_on_epoch = True
-    elif sched_type=='resnet':
-        sched = torch.optim.lr_scheduler.MultiStepLR(optim,
-            milestones=[100, 150]) # resnet original paper
-        sched_on_epoch = True
-    elif sched_type=='sc':
-        sched = torch.optim.lr_scheduler.OneCycleLR(
-            optim, 0.0001, epochs=epochs, steps_per_epoch=len(train_dl),
-            pct_start=5.0/epochs, anneal_strategy='linear'
-        )
-        sched_on_epoch = False
-    else:
-        raise RuntimeError(f'Unsupported LR scheduler type: {sched_type}')
+    optim, sched, sched_on_epoch = getattr(optims, sched_optim).optim_sched(
+        epochs, net, train_dl)
 
     metrics = train(epochs, train_dl, test_dl, net, device, crit, optim,
           sched, sched_on_epoch, half)

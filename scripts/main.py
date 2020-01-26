@@ -28,14 +28,8 @@ def main():
                         help='where to put results, default is ~/logdir')
 
     parser.add_argument('--loader-workers', type=int, default=-1, help='number of thread/workers for data loader (-1 means auto)')
-    parser.add_argument('--sched-type', default='',
-                        help='LR scheduler: darts (cosine) or '
-                             'resnet (multi-step)'
-                             'sc (super convergence)')
-    parser.add_argument('--optim-type', default='',
-                        help='Optimizer: darts(default) or resnet')
     parser.add_argument('--optim-sched', '-os', default='darts',
-                        help='Optimizer and scheduler: darts or resnet')
+                        help='Optimizer and scheduler provider')
 
     args = parser.parse_args()
 
@@ -49,13 +43,10 @@ def main():
     expdir = utils.full_path(args.outdir)
     os.makedirs(expdir, exist_ok=True)
 
-    args.sched_type = args.sched_type or args.optim_sched
-    args.optim_type = args.optim_type or args.optim_sched
-
     metrics = train_test(args.datadir, expdir, args.experiment_name, args.experiment_description,
                      args.epochs, args.model_name, args.train_batch, args.loader_workers,
                      args.seed, args.half, args.test_batch, args.loader,
-                     args.cutout, args.sched_type, args.optim_type)
+                     args.cutout, args.optim_sched)
 
     print_all_timings()
     print_timing('train_epoch')

@@ -76,6 +76,7 @@ Check [results folder](https://github.com/sytelus/cifar_testbed/tree/master/resu
 | resnet18 	| FALSE 	| FALSE           	| 128   	| in-memory    	|             	| 14.1      	|
 | resnet18 	| FALSE 	| TRUE            	| 128   	| in-memory    	|             	| 7.03      	|
 | resnet18 	| FALSE 	| TRUE            	| 128   	| torch-loader 	|             	| 12.98     	|
+| resnet18 	| TRUE  	| TRUE            	| 128   	| torch-loader 	|             	| 10.29     	|
 | resnet18 	| TRUE  	| TRUE            	| 128   	| in-memory    	|             	| 5.741     	|
 | resnet18 	| FALSE 	| TRUE            	| 256   	| in-memory    	|             	| 5.32      	|
 | resnet18 	| TRUE  	| TRUE            	| 256   	| in-memory    	|             	| 3.78      	|
@@ -105,7 +106,15 @@ Check [results folder](https://github.com/sytelus/cifar_testbed/tree/master/resu
 | resnet34 	| TRUE  	| TRUE            	| 2048  	| in-memory    	|             	| 4.517     	|
 |          	|       	|                 	|       	|              	|             	|           	|
 
+**Remarks**
 
+* V100 is 2X faster than my laptop RTX2080 GPUs in fp16 as well as fp32 across batch sizes.
+* Best epoch/secis achieved for fp16 batch size for 3.2sec/epoch with resnet18
+* Number of workers can make 2X difference on torch dataloader. Min value 2, ideally 4 per GPU.
+* cudnn.benchmark=True makes 2X difference
+* Doubling model size increases epoch time by 60-70% across batch sizes regardless of fp16 or fp32
+* fp16 reduces epoch time by 23-27%
+* Dali and torchdataloaders show similar performance overall even though dali loaders have much higher throughput
 
 ## Work-In-Progress
 

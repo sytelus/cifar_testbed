@@ -8,7 +8,7 @@
             "name": "main-1epoch",
             "type": "python",
             "request": "launch",
-            "program": "${cwd}/main.py",
+            "program": "${cwd}/scripts/main.py",
             "console": "integratedTerminal",
             "args": ["--epochs", "1"]
         },
@@ -16,7 +16,7 @@
             "name": "main",
             "type": "python",
             "request": "launch",
-            "program": "${cwd}/main.py",
+            "program": "${cwd}/scripts/main.py",
             "console": "integratedTerminal",
         },
         {

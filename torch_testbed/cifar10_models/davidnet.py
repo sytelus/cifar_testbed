@@ -58,8 +58,10 @@ class DavidNet(nn.Module):
             ConvBnPool(64, 64*2),
             ConvRes(64*2, 64*4),
             nn.AdaptiveMaxPool2d(1),
-            nn.Linear(in_features=512, out_features=10, bias=True)
         )
+        self._linear = nn.Linear(in_features=256, out_features=10, bias=True)
 
     def forward(self, x):
-        return self._op(x)
+        x = self._op(x).squeeze()
+        x = self._linear(x)
+        return x

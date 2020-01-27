@@ -57,4 +57,5 @@ class PiecewiseLR(_LRScheduler):
             assert self._i == len(self._epochs)-1 # sanity check
             lr = self._lrs[self._i]
 
+        assert lr <= max(self._lrs) and lr >= min(self._lrs)
         return [lr for base_lr in self.base_lrs]

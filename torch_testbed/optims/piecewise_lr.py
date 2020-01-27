@@ -10,8 +10,8 @@ class PiecewiseLR(_LRScheduler):
         assert len(epochs)==len(lrs) and len(epochs)>0 and epochs[0]==0
         assert all(x<y for x, y in zip(epochs, epochs[1:])) # monotonicity
 
-        self._epochs = epochs
-        self._lrs = lrs
+        self.epochs = epochs
+        self.lrs = lrs
         self._steps_per_epoch = steps_per_epoch
         self._i = 0
         self.epoch = 0
@@ -35,15 +35,15 @@ class PiecewiseLR(_LRScheduler):
 
     def _set_max(self):
         i = self._i
-        self._max_epoch = self._epochs[i+1] if len(self._epochs)>i+1 else self._epochs[i]
-        self._max_lr = self._lrs[i+1] if len(self._lrs)>i+1 else self._lrs[i]
+        self._max_epoch = self.epochs[i+1] if len(self.epochs)>i+1 else self.epochs[i]
+        self._max_lr = self.lrs[i+1] if len(self.lrs)>i+1 else self.lrs[i]
 
     def get_lr(self):
-        if self._i < len(self._epochs)-1: # room for i to advance
-            if self._epochs[self._i+1] < self.epoch: # exceeded next epoch
+        if self._i < len(self.epochs)-1: # room for i to advance
+            if self.epochs[self._i+1] < self.epoch: # exceeded next epoch
                 self._i += 1
-                self._min_epoch = self._epochs[self._i] # set min to current, max to next
-                self._min_lr = self._lrs[self._i]
+                self._min_epoch = self.epochs[self._i] # set min to current, max to next
+                self._min_lr = self.lrs[self._i]
                 self._set_max()
             # else leave i at the end
 
@@ -54,8 +54,8 @@ class PiecewiseLR(_LRScheduler):
             assert frac >= 0.0 and frac <= 1.0 # sanity check
             lr = (self._max_lr-self._min_lr)*frac + self._min_lr
         else:
-            assert self._i == len(self._epochs)-1 # sanity check
-            lr = self._lrs[self._i]
+            assert self._i == len(self.epochs)-1 # sanity check
+            lr = self.lrs[self._i]
 
-        assert lr <= max(self._lrs) and lr >= min(self._lrs)
+        assert lr <= max(self.lrs) and lr >= min(self.lrs)
         return [lr for base_lr in self.base_lrs]

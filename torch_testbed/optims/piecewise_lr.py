@@ -37,21 +37,21 @@ class PiecewiseLR(_LRScheduler):
     def get_lr(self):
         if self._i < len(self._epochs)-1: # room for i to advance
             if self._epochs[self._i+1] <= self.epoch: # exceeded next epoch
-                self._min_epoch = self._i # set min to current, max to next
+                self._min_epoch = self._epochs[self._i] # set min to current, max to next
                 self._min_lr = self._lrs[self._i]
                 self._i += 1
-                self._max_epoch = self._i
+                self._max_epoch = self._epochs[self._i]
                 self._max_lr = self._lrs[self._i]
             # else leave i at the end
 
+        assert self._max_epoch > self._min_epoch # sanity check
+        if self.epoch <= self._max_epoch:
             assert self.epoch >= self._min_epoch # sanity check
-            if self.epoch == self._min_epoch:
-                frac = 0.0
-            else:
-                frac = (self.epoch-self._min_epoch)/(self._max_epoch-self._min_epoch)
+            frac = (self.epoch-self._min_epoch)/(self._max_epoch-self._min_epoch)
             assert frac >= 0.0 and frac <= 1.0 # sanity check
             lr = (self._max_lr-self._min_lr)*frac + self._min_lr
         else:
+            assert self._i == len(self._epochs)-1 # sanity check
             lr = self._lrs[self._i]
 
         return [lr for base_lr in self.base_lrs]

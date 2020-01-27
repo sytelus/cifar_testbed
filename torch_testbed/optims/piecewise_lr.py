@@ -18,9 +18,8 @@ class PiecewiseLR(_LRScheduler):
         self.steps = -1
 
         self._min_epoch = epochs[0]
-        self._max_epoch = epochs[1] if len(epochs)>1 else epochs[0]
         self._min_lr = lrs[0]
-        self._max_lr = lrs[1] if len(lrs)>1 else lrs[0]
+        self._set_max()
 
         # super will save members in state_dict
         super().__init__(optimizer, last_epoch)
@@ -34,19 +33,23 @@ class PiecewiseLR(_LRScheduler):
 
         super().step(epoch)
 
+    def _set_max(self):
+        i = self._i
+        self._max_epoch = self._epochs[i+1] if len(self._epochs)>i+1 else self._epochs[i]
+        self._max_lr = self._lrs[i+1] if len(self._lrs)>i+1 else self._lrs[i]
+
     def get_lr(self):
         if self._i < len(self._epochs)-1: # room for i to advance
-            if self._epochs[self._i+1] <= self.epoch: # exceeded next epoch
+            if self._epochs[self._i+1] < self.epoch: # exceeded next epoch
+                self._i += 1
                 self._min_epoch = self._epochs[self._i] # set min to current, max to next
                 self._min_lr = self._lrs[self._i]
-                self._i += 1
-                self._max_epoch = self._epochs[self._i]
-                self._max_lr = self._lrs[self._i]
+                self._set_max()
             # else leave i at the end
 
-        assert self._max_epoch > self._min_epoch # sanity check
+        assert self._max_epoch >= self._min_epoch # sanity check
         if self.epoch <= self._max_epoch:
-            assert self.epoch >= self._min_epoch # sanity check
+            assert self.epoch >= self._min_epoch and self._max_epoch > self._min_epoch # sanity check
             frac = (self.epoch-self._min_epoch)/(self._max_epoch-self._min_epoch)
             assert frac >= 0.0 and frac <= 1.0 # sanity check
             lr = (self._max_lr-self._min_lr)*frac + self._min_lr

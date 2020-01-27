@@ -42,7 +42,7 @@ def train_epoch(epoch, net, train_dl, device, crit, optim,
         total += targets.size(0)
         correct += predicted.eq(targets).sum().item()
     if sched and sched_on_epoch:
-        sched.step()
+        sched.step(epoch=epoch)
     return 100.0*correct/total
 
 @MeasureTime

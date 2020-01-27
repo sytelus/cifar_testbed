@@ -1,6 +1,8 @@
 import logging
 import torch
 
+from .piecewise_lr import PiecewiseLR
+
 def optim_sched(epochs, net, *kargs, **kvargs):
         batch_size, train_size = 512, 50000
         steps_per_epoch = round(train_size / batch_size)
@@ -12,12 +14,13 @@ def optim_sched(epochs, net, *kargs, **kvargs):
                                 lr, momentum=momentum, weight_decay=weight_decay)
         logging.info(f'lr={lr}, momentum={momentum}, weight_decay={weight_decay}')
 
-        sched = torch.optim.lr_scheduler.OneCycleLR(
-            optim, max_lr=lr, epochs=epochs, steps_per_epoch=steps_per_epoch,
-            pct_start=warmup_steps/total_steps, anneal_strategy='cos',
-            cycle_momentum=True, div_factor=1.0e5,
-            final_div_factor=1.0e10
-        )
+        # sched = torch.optim.lr_scheduler.OneCycleLR(
+        #     optim, max_lr=lr, epochs=epochs, steps_per_epoch=steps_per_epoch,
+        #     pct_start=warmup_steps/total_steps, anneal_strategy='cos',
+        #     cycle_momentum=True, div_factor=1.0e5,
+        #     final_div_factor=1.0e10
+        # )
+        sched = PiecewiseLR(optim, epochs=[0, 8, 30], lrs=[1e-6, 0.4, 1e-3], steps_per_epoch=steps_per_epoch)
         sched_on_epoch = False
 
         return optim, sched, sched_on_epoch, batch_size

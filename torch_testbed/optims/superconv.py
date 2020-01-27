@@ -20,7 +20,7 @@ def optim_sched(epochs, net, *kargs, **kvargs):
         #     cycle_momentum=True, div_factor=1.0e5,
         #     final_div_factor=1.0e10
         # )
-        sched = PiecewiseLR(optim, epochs=[0, 8, 30], lrs=[1e-6, 0.4, 1e-3], steps_per_epoch=steps_per_epoch)
+        sched = PiecewiseLR(optim, epochs=[0, 15, 30, 100, 200, 600], lrs=[1e-8, 0.1, 1e-3, 1e-4, 1e-5, 1e-6], steps_per_epoch=steps_per_epoch)
         sched_on_epoch = False
 
         return optim, sched, sched_on_epoch, batch_size

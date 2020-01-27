@@ -65,7 +65,7 @@ def test(net, test_dl, device, half)->float:
 
 @MeasureTime
 def train(epochs, train_dl, test_dl, net, device, crit, optim,
-          sched, sched_on_epoch, half)->List[Mapping]:
+          sched, sched_on_epoch, half, quiet)->List[Mapping]:
     if half:
         net.half()
         crit.half()
@@ -77,7 +77,8 @@ def train(epochs, train_dl, test_dl, net, device, crit, optim,
                           sched, sched_on_epoch, half)
         test_acc = test(net, test_dl, device, half)
         metrics.append({'test_top1':test_acc, 'train_top1':train_acc, 'lr':lr})
-        logging.info(f'train_epoch={epoch}, test_top1={test_acc}, train_top1={train_acc}, lr={lr:.4g}')
+        if not quiet:
+            logging.info(f'train_epoch={epoch}, test_top1={test_acc}, train_top1={train_acc}, lr={lr:.4g}')
     return metrics
 
 def param_size(model:torch.nn.Module)->int:
@@ -144,7 +145,7 @@ def train_test(datadir:str, expdir:str,
     #train_dl = PrefetchDataLoader(train_dl, device)
 
     metrics = train(epochs, train_dl, test_dl, net, device, crit, optim,
-          sched, sched_on_epoch, half)
+          sched, sched_on_epoch, half, False)
 
     with open(os.path.join(expdir, 'metrics.yaml'), 'w') as f:
         yaml.dump(metrics, f)
@@ -171,12 +172,11 @@ def generate_sched_trials():
 
 def sched_trial_epoch(net_orig, sched_trial, train_dl, test_dl, epochs, device,
                       crit, half)->Tuple[torch.nn.Module, List[Mapping]]:
-
     net = copy.deepcopy(net_orig)
     optim = torch.optim.SGD(net.parameters(),
         sched_trial[0], momentum=sched_trial[1], weight_decay=sched_trial[2])
     metrics = train(epochs, train_dl, test_dl, net, device, crit, optim,
-          sched=None, sched_on_epoch=False, half=half)
+          sched=None, sched_on_epoch=False, half=half, quiet=True)
     return net, metrics
 
 @MeasureTime
@@ -238,7 +238,7 @@ def ideal_sched(datadir:str, expdir:str,
         trial_results = []
         run_results.append((epoch, trial_results))
         for sched_trial in sched_trials:
-            trained_net, metrics = sched_trial_epoch(net, sched_trial, train_dl, test_dl, 1, device, crit, half)
+            trained_net, metrics = sched_trial_epoch(net, sched_trial, train_dl, test_dl, 3, device, crit, half)
             acc = metrics[0]['test_top1']
             if acc > best_acc:
                 best_net, best_acc = trained_net, acc

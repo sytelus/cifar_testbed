@@ -20,7 +20,7 @@ def main():
     parser.add_argument('--test-batch', type=int, default=4096)
     parser.add_argument('--seed', '-s', type=int, default=42)
     parser.add_argument('--half', action='store_true', default=True)
-    parser.add_argument('--cutout', type=int, default=8)
+    parser.add_argument('--cutout', type=int, default=0)
     parser.add_argument('--loader', default='torch', help='torch or dali')
     parser.add_argument('--task', default='train_test', help='train_test or ideal_sched')
     parser.add_argument('--datadir', default='',

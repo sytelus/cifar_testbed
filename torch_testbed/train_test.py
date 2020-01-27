@@ -77,7 +77,7 @@ def train(epochs, train_dl, test_dl, net, device, crit, optim,
                           sched, sched_on_epoch, half)
         test_acc = test(net, test_dl, device, half)
         metrics.append({'test_top1':test_acc, 'train_top1':train_acc, 'lr':lr})
-        #logging.info(f'train_epoch={epoch}, test_top1={test_acc}, train_top1={train_acc}, lr={lr:.4g}')
+        logging.info(f'train_epoch={epoch}, test_top1={test_acc}, train_top1={train_acc}, lr={lr:.4g}')
     return metrics
 
 def param_size(model:torch.nn.Module)->int:

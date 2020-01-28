@@ -21,7 +21,7 @@ def main():
     parser.add_argument('--train-batch', '-b', type=int, default=-1)
     parser.add_argument('--test-batch', type=int, default=4096)
     parser.add_argument('--seed', '-s', type=int, default=42)
-    parser.add_argument('--half', type=lambda x:bool(distutils.util.strtobool(x)),
+    parser.add_argument('--half', type=lambda x:x.lower()=='true',
                         nargs='?', const=True, default=False)
     parser.add_argument('--cutout', type=int, default=0)
     parser.add_argument('--loader', default='torch', help='torch or dali')

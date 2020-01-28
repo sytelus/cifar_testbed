@@ -231,6 +231,8 @@ def ideal_sched(datadir:str, expdir:str,
         cutout=cutout)
     #train_dl = PrefetchDataLoader(train_dl, device)
 
+    lookahead = 3
+
     sched_trials = generate_sched_trials()
     run_results = []
     for epoch in range(epochs):
@@ -238,8 +240,8 @@ def ideal_sched(datadir:str, expdir:str,
         trial_results = []
         run_results.append((epoch, trial_results))
         for sched_trial in sched_trials:
-            trained_net, metrics = sched_trial_epoch(net, sched_trial, train_dl, test_dl, 3, device, crit, half)
-            acc = metrics[0]['test_top1']
+            trained_net, metrics = sched_trial_epoch(net, sched_trial, train_dl, test_dl, lookahead, device, crit, half)
+            acc = max(metrics, key=lambda m:m['test_top1'])['test_top1']
             if acc > best_acc:
                 best_net, best_acc = trained_net, acc
 

@@ -20,7 +20,12 @@ def add_timing(name:str, elapsed:float, no_print=True)->Statistics:
     return stats
 
 def get_timing(name:str)->Statistics:
+    global _timings
     return _timings.get(name)
+
+def get_all_timings()->Dict[str, Statistics]:
+    global _timings
+    return _timings
 
 def print_timing(name:str)->None:
     global _timings

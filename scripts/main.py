@@ -2,10 +2,12 @@ from typing import List, Tuple, Any
 import argparse
 import time
 import os
+import distutils
 
+import yaml
 
 from torch_testbed import train_test
-from torch_testbed.timing import MeasureTime, print_all_timings, print_timing, get_timing
+from torch_testbed.timing import MeasureTime, print_all_timings, print_timing, get_timing, get_all_timings
 from torch_testbed import utils
 
 
@@ -19,7 +21,8 @@ def main():
     parser.add_argument('--train-batch', '-b', type=int, default=-1)
     parser.add_argument('--test-batch', type=int, default=4096)
     parser.add_argument('--seed', '-s', type=int, default=42)
-    parser.add_argument('--half', action='store_true', default=False)
+    parser.add_argument('--half', type=lambda x:bool(distutils.util.strtobool(x)),
+                        nargs='?', const=True, default=False)
     parser.add_argument('--cutout', type=int, default=0)
     parser.add_argument('--loader', default='torch', help='torch or dali')
     parser.add_argument('--task', default='train_test', help='train_test or ideal_sched')
@@ -50,8 +53,12 @@ def main():
                      args.seed, args.half, args.test_batch, args.loader,
                      args.cutout, args.optim_sched)
 
+    with open('timings.yaml', 'w') as f:
+        yaml.dump(get_all_timings(), f)
+
     print_all_timings()
     print_timing('train_epoch')
+    print(metrics[-1])
 
     results = [
         ('test_acc', metrics[-1]['test_top1']),

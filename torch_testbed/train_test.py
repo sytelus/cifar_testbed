@@ -19,8 +19,8 @@ from . import optims
 # Training
 @MeasureTime
 def train_epoch(epoch, net, train_dl, device, crit, optim,
-                sched, sched_on_epoch, half)->float:
-    correct, total = 0, 0
+                sched, sched_on_epoch, half)->Tuple[float, float]:
+    correct, total, loss_total = 0, 0, 0.0
     net.train()
     for batch_idx, (inputs, targets) in enumerate(train_dl):
         inputs = inputs.to(device, non_blocking=True)
@@ -31,7 +31,7 @@ def train_epoch(epoch, net, train_dl, device, crit, optim,
 
         outputs = net(inputs)
         loss = crit(outputs, targets)
-
+        loss_total += loss.item()
         optim.zero_grad()
         loss.backward()
         optim.step()
@@ -43,7 +43,7 @@ def train_epoch(epoch, net, train_dl, device, crit, optim,
         correct += predicted.eq(targets).sum().item()
     if sched and sched_on_epoch:
         sched.step(epoch=epoch)
-    return 100.0*correct/total
+    return 100.0*correct/total, loss_total
 
 @MeasureTime
 def test(net, test_dl, device, half)->float:
@@ -73,10 +73,10 @@ def train(epochs, train_dl, test_dl, net, device, crit, optim,
     metrics = []
     for epoch in range(epochs):
         lr = optim.param_groups[0]['lr']
-        train_acc = train_epoch(epoch, net, train_dl, device, crit, optim,
+        train_acc, loss = train_epoch(epoch, net, train_dl, device, crit, optim,
                           sched, sched_on_epoch, half)
         test_acc = test(net, test_dl, device, half)
-        metrics.append({'test_top1':test_acc, 'train_top1':train_acc, 'lr':lr})
+        metrics.append({'test_top1':test_acc, 'train_top1':train_acc, 'lr':lr, 'epoch': epoch, 'train_loss': loss})
         if not quiet:
             logging.info(f'train_epoch={epoch}, test_top1={test_acc}, train_top1={train_acc}, lr={lr:.4g}')
     return metrics

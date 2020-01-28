@@ -8,7 +8,7 @@ def optim_sched(epochs, net, *kargs, **kvargs):
         logging.info(f'lr={lr}, momentum={momentum}, weight_decay={weight_decay}')
 
         sched = torch.optim.lr_scheduler.MultiStepLR(optim,
-            milestones=[100, 150]) # resnet original paper
+            milestones=[100, 150, 200, 400, 600]) # resnet original paper
         sched_on_epoch = True
 
         return optim, sched, sched_on_epoch, 128

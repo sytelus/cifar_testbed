@@ -15,11 +15,11 @@ def main():
     parser.add_argument('--experiment-name', '-n', default='throwaway')
     parser.add_argument('--experiment-description', '-d', default='throwaway')
     parser.add_argument('--epochs', '-e', type=int, default=35)
-    parser.add_argument('--model-name', '-m', default='davidnet')
+    parser.add_argument('--model-name', '-m', default='resnet34')
     parser.add_argument('--train-batch', '-b', type=int, default=-1)
     parser.add_argument('--test-batch', type=int, default=4096)
     parser.add_argument('--seed', '-s', type=int, default=42)
-    parser.add_argument('--half', action='store_true', default=True)
+    parser.add_argument('--half', action='store_true', default=False)
     parser.add_argument('--cutout', type=int, default=0)
     parser.add_argument('--loader', default='torch', help='torch or dali')
     parser.add_argument('--task', default='train_test', help='train_test or ideal_sched')
@@ -29,7 +29,7 @@ def main():
                         help='where to put results, default is ~/logdir')
 
     parser.add_argument('--loader-workers', type=int, default=-1, help='number of thread/workers for data loader (-1 means auto)')
-    parser.add_argument('--optim-sched', '-os', default='superconv',
+    parser.add_argument('--optim-sched', '-os', default='resnet',
                         help='Optimizer and scheduler provider')
 
     args = parser.parse_args()

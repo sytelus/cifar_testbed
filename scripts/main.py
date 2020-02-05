@@ -53,7 +53,7 @@ def main():
                      args.seed, args.half, args.test_batch, args.loader,
                      args.cutout, args.optim_sched)
 
-    with open('timings.yaml', 'w') as f:
+    with open(os.path.join(expdir, 'timings.yaml'), 'w') as f:
         yaml.dump(get_all_timings(), f)
 
     print_all_timings()

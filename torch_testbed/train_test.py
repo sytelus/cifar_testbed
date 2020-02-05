@@ -236,22 +236,24 @@ def ideal_sched(datadir:str, expdir:str,
     sched_trials = generate_sched_trials()
     run_results = []
     for epoch in range(epochs):
-        best_net, best_acc = None, -1
+        # for this epoch we will conduct several trials
+        best_net, best_max_acc, best_epoch_acc, best_sched_trial = None, -1, -1, None
         trial_results = []
         run_results.append((epoch, trial_results))
         for sched_trial in sched_trials:
             trained_net, metrics = sched_trial_epoch(net, sched_trial, train_dl, test_dl, lookahead, device, crit, half)
-            acc = max(metrics, key=lambda m:m['test_top1'])['test_top1']
-            if acc > best_acc:
-                best_net, best_acc = trained_net, acc
+            epoch_acc = metrics[0]['test_top1']
+            max_acc = max(metrics, key=lambda m:m['test_top1'])['test_top1']
+            if max_acc > best_max_acc:
+                best_net, best_max_acc, best_epoch_acc, best_sched_trial = trained_net, max_acc, epoch_acc, sched_trial
 
-            trial_results.append((acc, sched_trial, metrics))
+            trial_results.append((max_acc, sched_trial, metrics, epoch_acc))
+
             trial_results.sort(key=lambda t: t[0], reverse=True)  # keep sorted as we are saving
             with open(os.path.join(expdir, 'sched_trials.yaml'), 'w') as f:
                 yaml.dump(run_results, f)
         net = best_net
-        best_trial = trial_results[0]
-        logging.info(f'train_epoch={epoch}, test_top1={best_trial[0]}, sched={best_trial[1]}')
+        logging.info(f'train_epoch={epoch}, best_max={best_max_acc}, epoch_acc={best_epoch_acc}, sched={best_sched_trial}')
 
     return run_results[-1][1][0][2], train_batch_size
 

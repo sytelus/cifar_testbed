@@ -116,6 +116,7 @@ Check [results folder](https://github.com/sytelus/cifar_testbed/tree/master/resu
 * fp16 reduces epoch time by 23-27%
 * Dali and torchdataloaders show similar performance overall even though dali loaders have much higher throughput
 * In memory random tensors vs cifar tensors have more than 2X difference!
+* Epoch avg (sec) without half prec, batch=128: Titan Xp: 59.03, P100: 17.92, V100: 10.86
 
 ## Work-In-Progress
 

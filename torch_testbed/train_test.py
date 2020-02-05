@@ -231,7 +231,7 @@ def ideal_sched(datadir:str, expdir:str,
         cutout=cutout)
     #train_dl = PrefetchDataLoader(train_dl, device)
 
-    lookahead = 12
+    lookahead = 6
 
     sched_trials = generate_sched_trials()
     run_results = []

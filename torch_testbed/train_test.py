@@ -9,9 +9,13 @@ import itertools
 import copy
 
 import torch
+from torch.optim.optimizer import Optimizer
+from torch.optim.lr_scheduler import _LRScheduler
+from torch.nn.modules.loss import _Loss
+
 import yaml
 
-from torch_testbed.timing import MeasureTime
+from torch_testbed.timing import MeasureTime, MeasureBlockTime
 from torch_testbed import cifar10_models
 from torch_testbed import utils
 from . import optims
@@ -29,14 +33,9 @@ def train_epoch(epoch, net, train_dl, device, crit, optim,
         if half:
             inputs = inputs.half()
 
-        outputs = net(inputs)
-        loss = crit(outputs, targets)
-        loss_total += loss.item()
-        optim.zero_grad()
-        loss.backward()
-        optim.step()
-        if sched and not sched_on_epoch:
-            sched.step()
+        outputs, loss = train_step(net, crit, optim, sched, sched_on_epoch,
+                                   inputs, targets)
+        loss_total += loss
 
         _, predicted = outputs.max(1)
         total += targets.size(0)
@@ -44,6 +43,23 @@ def train_epoch(epoch, net, train_dl, device, crit, optim,
     if sched and sched_on_epoch:
         sched.step(epoch=epoch)
     return 100.0*correct/total, loss_total
+
+@MeasureTime
+def train_step(net:torch.nn.Module,
+               crit:_Loss, optim:Optimizer, sched:_LRScheduler, sched_on_epoch:bool,
+               inputs:torch.Tensor, targets:torch.Tensor)->Tuple[torch.Tensor, float]:
+    with MeasureBlockTime('forward'):
+        outputs = net(inputs)
+
+    loss = crit(outputs, targets)
+    optim.zero_grad()
+    with MeasureBlockTime('backward'):
+        loss.backward()
+
+    optim.step()
+    if sched and not sched_on_epoch:
+        sched.step()
+    return outputs, loss.item()
 
 @MeasureTime
 def test(net, test_dl, device, half)->float:

@@ -247,7 +247,7 @@ def ideal_sched(datadir:str, expdir:str,
         cutout=cutout)
     #train_dl = PrefetchDataLoader(train_dl, device)
 
-    lookahead = 6
+    lookahead = 12
 
     sched_trials = generate_sched_trials()
     run_results = []
@@ -257,18 +257,26 @@ def ideal_sched(datadir:str, expdir:str,
         trial_results = []
         run_results.append((epoch, trial_results))
         for sched_trial in sched_trials:
+            # get trained net and metrics for this trial
             trained_net, metrics = sched_trial_epoch(net, sched_trial, train_dl, test_dl, lookahead, device, crit, half)
+            # extract test top1 for this trial for the first epoch
             epoch_acc = metrics[0]['test_top1']
+            # extract best test top1 from the lookaheah
             max_acc = max(metrics, key=lambda m:m['test_top1'])['test_top1']
+            # if this trial produced the best then record it
             if max_acc > best_max_acc:
                 best_net, best_max_acc, best_epoch_acc, best_sched_trial = trained_net, max_acc, epoch_acc, sched_trial
 
+            # update trial results
             trial_results.append((max_acc, sched_trial, metrics, epoch_acc))
-
+            # keep best trial at the top and save it
             trial_results.sort(key=lambda t: t[0], reverse=True)  # keep sorted as we are saving
             with open(os.path.join(expdir, 'sched_trials.yaml'), 'w') as f:
                 yaml.dump(run_results, f)
-        net = best_net
+
+        # retrain for 1 epoch
+        net = sched_trial_epoch(net, best_sched_trial, train_dl, test_dl, 1, device, crit, half)
+
         logging.info(f'train_epoch={epoch}, best_max={best_max_acc}, epoch_acc={best_epoch_acc}, sched={best_sched_trial}')
 
     return run_results[-1][1][0][2], train_batch_size

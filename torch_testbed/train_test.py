@@ -275,7 +275,7 @@ def ideal_sched(datadir:str, expdir:str,
                 yaml.dump(run_results, f)
 
         # retrain for 1 epoch
-        net = sched_trial_epoch(net, best_sched_trial, train_dl, test_dl, 1, device, crit, half)
+        net, _ = sched_trial_epoch(net, best_sched_trial, train_dl, test_dl, 1, device, crit, half)
 
         logging.info(f'train_epoch={epoch}, best_max={best_max_acc}, epoch_acc={best_epoch_acc}, sched={best_sched_trial}')
 

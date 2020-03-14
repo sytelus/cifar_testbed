@@ -106,7 +106,7 @@ def param_size(model:torch.nn.Module)->int:
 @MeasureTime
 def train_test(datadir:str, expdir:str,
                exp_name:str, exp_desc:str, epochs:int, model_name:str,
-               train_batch_size:int, loader_workers:int, seed:int, half:bool, test_batch_size:int,
+               train_batch_size:int, loader_workers:int, seed, half:bool, test_batch_size:int,
                loader:str, cutout:int, sched_optim:str)->Tuple[List[Mapping], int]:
 
     if loader=='torch':
@@ -198,7 +198,7 @@ def sched_trial_epoch(net_orig, sched_trial, train_dl, test_dl, epochs, device,
 @MeasureTime
 def ideal_sched(datadir:str, expdir:str,
                exp_name:str, exp_desc:str, epochs:int, model_name:str,
-               train_batch_size:int, loader_workers:int, seed:int, half:bool, test_batch_size:int,
+               train_batch_size:int, loader_workers:int, seed, half:bool, test_batch_size:int,
                loader:str, cutout:int, sched_optim:str):
 
     if loader=='torch':

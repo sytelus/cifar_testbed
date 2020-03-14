@@ -36,12 +36,16 @@ def setup_logging(filepath:Optional[str]=None,
         logger.addHandler(fh)
 
 def setup_cuda(seed):
+    seed = int(seed)
     # setup cuda
     cudnn.enabled = True
     np.random.seed(seed)
     torch.manual_seed(seed)
     torch.cuda.manual_seed_all(seed)
     cudnn.benchmark = True
+    #cudnn.deterministic = False
+    # torch.cuda.empty_cache()
+    # torch.cuda.synchronize()
 
 def cuda_device_names()->str:
     return ', '.join([torch.cuda.get_device_name(i) for i in range(torch.cuda.device_count())])

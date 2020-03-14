@@ -32,7 +32,7 @@ def main():
                         help='where to put results, default is ~/logdir')
 
     parser.add_argument('--loader-workers', type=int, default=-1, help='number of thread/workers for data loader (-1 means auto)')
-    parser.add_argument('--optim-sched', '-os', default='resnet',
+    parser.add_argument('--optim-sched', '-os', default='darts',
                         help='Optimizer and scheduler provider')
 
     args = parser.parse_args()

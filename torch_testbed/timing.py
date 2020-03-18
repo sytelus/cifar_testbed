@@ -74,14 +74,17 @@ class MeasureBlockTime:
         self.name = name
         self.no_print = no_print
         self.disable_gc = disable_gc
+    def cur_elapsed(self)->float:
+        return timeit.default_timer() - self.start_time
     def __enter__(self):
         self.gcold = gc.isenabled()
         if self.disable_gc:
             gc.disable()
         self.start_time = timeit.default_timer()
+        return self
     def __exit__(self,ty,val,tb):
-        self.elapsed = timeit.default_timer() - self.start_time
+        self.elapsed = self.cur_elapsed()
         if self.disable_gc and self.gcold:
             gc.enable()
-        add_timing(self.name, self.elapsed, no_print=self.no_print)
+        self.stats = add_timing(self.name, self.elapsed, no_print=self.no_print)
         return False #re-raise any exceptions

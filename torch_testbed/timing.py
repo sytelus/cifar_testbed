@@ -5,31 +5,39 @@ from typing import Dict
 from runstats import Statistics
 import logging
 
-_timings:Dict[str, Statistics] = {}
+_stats:Dict[str, Statistics] = {}
+_lasts:Dict[str, float] = {}
 
 def add_timing(name:str, elapsed:float, no_print=True)->Statistics:
-    global _timings
-    stats = _timings.get(name, None)
+    global _stats
+    global _lasts
+
+    stats = _stats.get(name, None)
     if stats is None:
         stats = Statistics()
-        _timings[name] = stats
+        _stats[name] = stats
     stats.push(elapsed)
+    _lasts[name] = elapsed
 
     if not no_print:
         logging.info('Timing "{}": {}s'.format(name, elapsed))
     return stats
 
+def get_last(name:str)->float:
+    global _lasts
+    return _lasts[name]
+
 def get_timing(name:str)->Statistics:
-    global _timings
-    return _timings.get(name)
+    global _stats
+    return _stats.get(name)
 
 def get_all_timings()->Dict[str, Statistics]:
-    global _timings
-    return _timings
+    global _stats
+    return _stats
 
 def print_timing(name:str)->None:
-    global _timings
-    stats = _timings.get(name, None)
+    global _stats
+    stats = _stats.get(name, None)
     if stats is None:
         logging.info(f'timing_name="{name}", avg=never_recorded')
     else:
@@ -43,13 +51,13 @@ def print_timing(name:str)->None:
              )
 
 def print_all_timings()->None:
-    global _timings
-    for name in _timings.keys():
+    global _stats
+    for name in _stats.keys():
         print_timing(name)
 
 def clear_timings() -> None:
-    global _timings
-    _timings.clear()
+    global _stats
+    _stats.clear()
 
 def MeasureTime(f, no_print=True, disable_gc=False):
     @wraps(f)

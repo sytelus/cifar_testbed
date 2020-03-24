@@ -15,7 +15,7 @@ from torch.nn.modules.loss import _Loss
 
 import yaml
 
-from torch_testbed.timing import MeasureTime, MeasureBlockTime
+from torch_testbed.timing import MeasureTime, MeasureBlockTime, get_last
 from torch_testbed import cifar10_models
 from torch_testbed import utils
 from . import optims
@@ -94,7 +94,8 @@ def train(epochs, train_dl, test_dl, net, device, crit, optim,
         test_acc = test(net, test_dl, device, half)
         metrics.append({'test_top1':test_acc, 'train_top1':train_acc, 'lr':lr, 'epoch': epoch, 'train_loss': loss})
         if not quiet:
-            logging.info(f'train_epoch={epoch}, test_top1={test_acc}, train_top1={train_acc}, lr={lr:.4g}')
+            logging.info(f'train_epoch={epoch}, test_top1={test_acc},'
+                         f' train_top1={train_acc}, lr={lr:.4g}, duration={get_last("train_epoch")}')
     return metrics
 
 def param_size(model:torch.nn.Module)->int:

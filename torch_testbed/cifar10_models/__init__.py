@@ -6,3 +6,4 @@ from .resnet_orig import *
 from .googlenet import *
 from .inception import *
 from .davidnet import DavidNet, davidnet
+from .wide_resnet import *

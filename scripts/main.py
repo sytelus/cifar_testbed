@@ -38,7 +38,7 @@ def main():
     args = parser.parse_args()
 
     if not args.datadir:
-        args.datadir = os.environ.get('PT_DATA_DIR', '') or '~/torchvision_data_dir'
+        args.datadir = os.environ.get('PT_DATA_DIR', '') or '~/dataroot'
     if not args.outdir:
         args.outdir = os.environ.get('PT_OUTPUT_DIR', '')
         if not args.outdir:
